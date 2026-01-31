@@ -1,3 +1,12 @@
+'''
+    Things to change when we switch between India, GLobal, KSA
+    1) Below Client inside init_google_sheet function change the sheet name
+    2) In the step 0 below the Driver varibale change between driver.get 
+    3) In the step 2 while direct url for publisher change between driver.get
+    4) Inside the go_to_custom_events function we switch between the url
+    5) In the step 5 we have urls to directly go to publisher after data is fetching
+    6) This is pretty main we have to change the LC based on the global, india, ksa
+'''
 import os
 import time
 from selenium import webdriver
@@ -18,8 +27,12 @@ def init_google_sheet():
         "/Users/admin/Desktop/Product_Adaption_Data/Credential File/mycred-googlesheet.json", scopes=scopes
     )
     client = gspread.authorize(creds)
-
+    # India
+    # sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Custome Event Script Data 3")
+    # Global
     sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Custome Event Script Data 3")
+    # KSA
+    # sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Custome Event Script Data 3")
     return sheet
 
 try:
@@ -42,7 +55,12 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 wait = WebDriverWait(driver, 120) 
 
 # Step 1: Open admin dashboard
+# India
 driver.get("https://dashboard.in.webengage.com/admin")
+# Global
+driver.get("https://dashboard.webengage.com/admin")
+# KSA
+driver.get("https://dashboard.ksa.webengage.com/admin")
 
 # --- GIVE IT A MOMENT TO REDIRECT ---
 print("⏳ Waiting for page to settle...")
@@ -96,7 +114,12 @@ else:
             driver.save_screenshot("nav_failure.png")
             # If everything fails, try going to the URL directly as a last resort
             print("🚀 Attempting direct URL navigation...")
-            driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+            # India
+            # driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+            # Global
+            driver.get("https://dashboard.webengage.com/admin/publisher.html?action=list")
+            # KSA
+            # driver.get("https://dashboard.ksa.webengage.com/admin/publisher.html?action=list")
 
 print("🎯 SUCCESS: You are now on the Publishers page.")
 
@@ -170,7 +193,7 @@ def handle_request_modal(wait, driver):
         
         # 3. FORCE SELECTION VIA JAVASCRIPT
         # This is the most reliable way to select 'Viewer' regardless of UI quirks
-        print("🚀 Forcing selection via JavaScript...")
+        print("🚀 # React-safe role selection (required only during first-time access request)")
         driver.execute_script(
             "arguments[0].value = '~32537i7'; arguments[0].dispatchEvent(new Event('change'));", 
             role_dropdown
@@ -268,7 +291,12 @@ def open_data_platform(driver, wait):
         raise Exception("❌ Failed to open Data Platform sidebar")
     
 def go_to_custom_events(driver, wait, account_id):
-    url = f"https://dashboard.in.webengage.com/accounts/{account_id}/data-management/events/attributes"
+    # India
+    # url = f"https://dashboard.in.webengage.com/accounts/{account_id}/data-management/events/attributes"
+    # Global
+    url = f"https://dashboard.webengage.com/accounts/{account_id}/data-management/events/attributes"
+    # KSA
+    # url = f"https://dashboard.ksa.webengage.com/accounts/{account_id}/data-management/events/attributes"
     driver.get(url)
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
     print("✅ Landed on Custom Events")
@@ -482,7 +510,7 @@ for code in LICENSE_CODES:
             # click_custom_events(wait)
             
             # We are not using above three as im unable to open sidebar so we will directly use the url 
-            account_id = code  # same as license code in your case
+            account_id = code 
 
             go_to_custom_events(driver, wait, account_id)
 
@@ -507,5 +535,10 @@ for code in LICENSE_CODES:
             driver.close() # Closes current (Edit) tab
             driver.switch_to.window(main_window)
         
-        driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+        # India
+        # driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+        # Global
+        driver.get("https://dashboard.webengage.com/admin/publisher.html?action=list")
+        # KSA
+        # driver.get("https://dashboard.ksa.webengage.com/admin/publisher.html?action=list")
         time.sleep(2)

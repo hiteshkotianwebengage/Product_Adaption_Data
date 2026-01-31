@@ -1,3 +1,11 @@
+'''
+    Things to change when we switch between India, GLobal, KSA
+    1) Below Client inside init_google_sheet function change the sheet name
+    2) In the step 0 below the Driver varibale change between driver.get 
+    3) In the step 2 while direct url for publisher change between driver.get
+    4) In the step E we have urls to directly go to publisher after data is fetching
+    5) This is pretty main we have to change the LC based on the global, india, ksa
+'''
 import os
 import time
 from selenium import webdriver
@@ -19,7 +27,12 @@ def init_google_sheet():
     )
     client = gspread.authorize(creds)
 
+    # India
+    # sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Copy of Dashboard Global")
+    # India
     sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Copy of Dashboard Global")
+    # India
+    # sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Copy of Dashboard Global")
     return sheet
 
 try:
@@ -42,7 +55,13 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 wait = WebDriverWait(driver, 120) 
 
 # Step 1: Open admin dashboard
-driver.get("https://dashboard.in.webengage.com/admin")
+# India
+# driver.get("https://dashboard.in.webengage.com/admin")
+# Global
+driver.get("https://dashboard.webengage.com/admin")
+# KSA
+# driver.get("https://dashboard.ksa.webengage.com/admin")
+
 
 # --- GIVE IT A MOMENT TO REDIRECT ---
 print("⏳ Waiting for page to settle...")
@@ -96,7 +115,12 @@ else:
             driver.save_screenshot("nav_failure.png")
             # If everything fails, try going to the URL directly as a last resort
             print("🚀 Attempting direct URL navigation...")
-            driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+            # India
+            # driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+            # Global
+            driver.get("https://dashboard.webengage.com/admin/publisher.html?action=list")
+            # KSA
+            # driver.get("https://dashboard.ksa.webengage.com/admin/publisher.html?action=list")
 
 print("🎯 SUCCESS: You are now on the Publishers page.")
 
@@ -170,7 +194,7 @@ def handle_request_modal(wait, driver):
         
         # 3. FORCE SELECTION VIA JAVASCRIPT
         # This is the most reliable way to select 'Viewer' regardless of UI quirks
-        print("🚀 Forcing selection via JavaScript...")
+        print("🚀 # React-safe role selection (required only during first-time access request)")
         driver.execute_script(
             "arguments[0].value = '~32537i7'; arguments[0].dispatchEvent(new Event('change'));", 
             role_dropdown
@@ -385,7 +409,7 @@ def log_error_to_sheet(sheet, license_code, stage, error_reason):
 
 LICENSE_CODES = [
     
-    "in~~15ba205d1","in~~10a5cbb1d","in~311c4742","in~311c4724","in~~991991c4","in~~134106220","in~311c488b","in~11b564274","in~14507c728","in~~15ba20670","in~~15ba2068a","in~~47b666d5","in~76aa1d8","in~76aa247","in~~99199258","in~~2024c207","in~~c2ab36a2","in~aa1318ab","in~d3a49bac","in~~c2ab3671","in~~47b66716","in~~991991d0","in~~10a5cbb34","in~76aa273","in~~99199217","in~76aa298","in~~1341061c6","in~d3a49b75","in~58adcb79","in~~15ba20672","in~~71680bbb","in~58adcb94","in~11b5641d0","in~d3a49b43","in~~10a5cbb79","in~826171c3","in~58adcb40","in~14507c6a9","in~76aa22a","in~~15ba20749","in~311c467c","in~~47b66689","in~~2024c1d7","in~~2024c218","in~~71680b3c","in~~47b6668a","in~~99199244","in~~c2ab36ad","in~76aa268","in~~9919921b","in~~134106216","in~~71680b92","in~76aa245","in~311c46d4","in~311c46d3","in~58adcb85","in~~2024c249","in~76aa1c0","in~11b564332","in~~71680c19","in~~15ba20752","in~~2024c2a0","in~14507c681","in~~2024c2c1","in~76aa206","in~aa131675","in~14507c65b","in~11b5641a9","in~d3a49b10","in~~71680c2b","in~58adcb50","in~~10a5cbc25","in~aa13163a","in~11b56418d","in~311c4663","in~~c2ab3781","in~~1341062bb","in~~991992c4","in~~10a5cbc2d","in~~1341062c1","in~~991992cc","in~14507c641","in~~71680c30","in~aa13164b","in~~15ba20759","in~~15ba205c0","in~~2024c231","in~~47b6677d","in~58adcb36","in~aa13166b","in~~991992d1","in~~1341062c2","in~~99199081","in~14507c63b","in~aa131665","in~~71680b90","in~14507c666","in~aa131632","in~76aa20d","in~311c464b","in~311c4766","in~~71680c4c","in~11b564172","in~~47b66782","in~11b564181"
+    "in~~15ba205d1","in~~10a5cbb1d","in~311c4742","in~311c4724"
 ]
 
 for code in LICENSE_CODES:
@@ -454,5 +478,10 @@ for code in LICENSE_CODES:
             driver.close() # Closes current (Edit) tab
             driver.switch_to.window(main_window)
         
-        driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+        # India
+        # driver.get("https://dashboard.in.webengage.com/admin/publisher.html?action=list")
+        # Global
+        driver.get("https://dashboard.webengage.com/admin/publisher.html?action=list")
+        # KSA
+        # driver.get("https://dashboard.ksa.webengage.com/admin/publisher.html?action=list")
         time.sleep(2)
