@@ -19,7 +19,7 @@ def init_google_sheet():
     )
     client = gspread.authorize(creds)
 
-    sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Custome Event Script Data 3")
+    sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("User India")
     return sheet
 
 try:
@@ -222,135 +222,125 @@ def click_edit(driver, wait, license_code):
     print("✅ Clicked the specific edit button")
 
 
-def open_data_platform(driver, wait):
-    print("⏳ Opening Data Platform menu...")
+def click_users(wait):
+    print("⏳ Clicking Users...")
 
-    data_platform_xpath = (
-        "//span[contains(@class,'menu__group__link') and .//span[text()='Data Platform']]"
-    )
-
-    element = wait.until(
-        EC.presence_of_element_located((By.XPATH, data_platform_xpath))
-    )
-
-    # 🟢 HOVER FIRST (important)
-    ActionChains(driver).move_to_element(element).pause(0.8).perform()
-
-    parent_li = element.find_element(By.XPATH, "./ancestor::li[contains(@class,'menu__group')]")
-
-    # 🟢 CLICK ONLY IF STILL COLLAPSED
-    if "open" not in parent_li.get_attribute("class"):
-        driver.execute_script("arguments[0].click();", element)
-        time.sleep(1)
-
-    print("✅ Data Platform menu ready")
-
-
-def click_data_management(wait):
-    print("⏳ Clicking Data Management...")
-
-    data_management_xpath = (
-        "//a[contains(@href,'/data-management/system/attributes') and .//span[text()='Data Management']]"
+    users_xpath = (
+        "//a[contains(@href,'/users/overview') and .//span[text()='Users']]"
     )
 
     wait.until(
-        EC.element_to_be_clickable((By.XPATH, data_management_xpath))
+        EC.element_to_be_clickable((By.XPATH, users_xpath))
     ).click()
 
-    print("✅ Clicked Data Management")
+    print("✅ Users opened")
 
-def click_custom_events(wait):
-    print("⏳ Clicking Custom Events tab...")
+def switch_users_delta(wait, driver, mode):
+    """ mode = 'WoW' or 'MoM' """
+    print(f"🔁 Switching Users delta to {mode}")
 
-    custom_events_xpath = (
-        "//a[contains(@href,'/data-management/events/attributes') and normalize-space()='Custom Events']"
-    )
-
-    wait.until(
-        EC.element_to_be_clickable((By.XPATH, custom_events_xpath))
-    ).click()
-
-    print("✅ Custom Events opened")
-
-def extract_custom_events_page(driver, license_code):
-    rows_data = []
-    # Wait for at least one row to be present before scraping
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table__row"))
+    dropdown_head = wait.until(
+        EC.element_to_be_clickable(
+            (By.XPATH, "//th//div[contains(@class,'pop-over__head')]")
         )
-    except:
-        return []
+    )
 
-    rows = driver.find_elements(By.XPATH, "//tr[contains(@class,'table__row')]")
+    driver.execute_script("arguments[0].click();", dropdown_head)
+
+    option = wait.until(
+        EC.element_to_be_clickable(
+            (By.XPATH, f"//span[normalize-space()='{mode}']")
+        )
+    )
+
+    driver.execute_script("arguments[0].click();", option)
+
+    # 🔹 CRITICAL: wait for DOM refresh
+    time.sleep(1.2)
+    wait_for_users_table_or_empty(driver)
+
+def extract_users_table(driver, license_code, delta_type):
+    rows_data = []
+
+    has_data = wait_for_users_table_or_empty(driver)
+
+    if not has_data:
+        print(f"⚠️ No Users data for {delta_type}")
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            delta_type,
+            "NO_DATA"
+        ]]
+
+    rows = driver.find_elements(
+        By.XPATH,
+        "//tbody/tr[contains(@class,'table__row')]"
+    )
 
     for row in rows:
         try:
             cells = row.find_elements(By.XPATH, "./td")
-            if len(cells) < 8: continue 
+            if len(cells) < 4:
+                continue
 
-            # 1. Event Name 
-            event_name = cells[0].find_element(By.XPATH, ".//span[contains(@class,'text-ellipsis')]").get_attribute("title").strip()
+            channel = cells[0].text.strip() or "UNKNOWN"
+            reach_pct = cells[1].text.strip() or "0%"
+            reach_count = cells[2].text.strip() or "0"
 
-            # 2. Is PII / Data Type / Personalization
-            is_pii = cells[1].text.strip() or "NO"
-            data_type = cells[2].text.strip() or "NULL"
-            personalization = cells[3].text.strip() or "Disabled"
-
-            # 3. Status Columns (Website, Android, iOS, Others)
-            def get_status(cell):
-                try:
-                    return cell.find_element(By.CLASS_NAME, "status-label").text.strip()
-                except:
-                    return "NULL"
-
-            website = get_status(cells[4])
-            android = get_status(cells[5])
-            ios = get_status(cells[6])
-            others = get_status(cells[7])
+            # Change %
+            change = cells[3].text.strip() or "0.00%"
 
             rows_data.append([
-                license_code, event_name, is_pii, data_type, 
-                personalization, website, android, ios, others
+                license_code,
+                channel,
+                reach_pct,
+                reach_count,
+                delta_type,
+                change
             ])
-        except Exception as e:
-            print(f"⚠️ Skipping a row due to error: {e}")
+
+        except:
             continue
 
     return rows_data
 
-def extract_all_custom_events(driver, license_code):
-    print("📥 Extracting Custom Events (all pages)...")
-    all_data = []
-    page_number = 1
+def extract_users_reachability(driver, wait, license_code):
+    print("📥 Extracting Users Reachability (WoW + MoM)...")
 
-    while True:
-        print(f"📄 Scraping Page {page_number}...")
-        page_data = extract_custom_events_page(driver, license_code)
-        all_data.extend(page_data)
+    all_rows = []
 
-        try:
-            # Check for the "Next" button link
-            next_parent = driver.find_element(By.XPATH, "//li[contains(@class,'pagination__next')]")
-            
-            # If the parent <li> has 'is-disabled', we are on the last page
-            if "is-disabled" in next_parent.get_attribute("class"):
-                print("🏁 Reached last page.")
-                break
+    for mode in ["WoW", "MoM"]:
+        switch_users_delta(wait, driver, mode)
+        rows = extract_users_table(driver, license_code, mode)
+        all_rows.extend(rows)
 
-            next_link = next_parent.find_element(By.TAG_NAME, "a")
-            driver.execute_script("arguments[0].click();", next_link)
-            
-            # Short wait for the table to update
-            time.sleep(2)
-            page_number += 1
-            
-        except Exception as e:
-            print(f"ℹ️ Pagination ended or failed: {e}")
-            break
+    return all_rows
 
-    print(f"✅ Total Extracted: {len(all_data)} events")
-    return all_data
+def wait_for_users_table_or_empty(driver, timeout=6):
+    """
+    Waits for:
+    - users rows
+    - footer row (Overall)
+    - empty state
+    Returns True if data rows exist, False otherwise
+    """
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//tbody/tr[contains(@class,'table__row')]")
+                or d.find_elements(By.XPATH, "//tfoot/tr")
+                or "No data" in d.page_source
+            )
+        )
+    except:
+        return False
+
+    rows = driver.find_elements(By.XPATH, "//tbody/tr[contains(@class,'table__row')]")
+    return len(rows) > 0
+
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -374,8 +364,7 @@ def log_error_to_sheet(sheet, license_code, stage, error_reason):
 
 
 LICENSE_CODES = [
-    
-    "in~311c4838","in~11b5642c7","in~8261735b","in~58adcc15","in~aa131896","in~826173c2","in~14507c7cd","in~58adcd07","in~~10a5cba6d","in~58adcbdb","in~~2024c1a8","in~~47b66667","in~14507c80b","in~76aa34a","in~14507c789","in~14507c784","in~11b564357","in~~c2ab364c","in~~c2ab3662","in~76aa392","in~~10a5cba77","in~8261729b","in~14507c76b","in~311c4774","in~~47b66639","in~14507c77b","in~~47b66647","in~58adcc4a","in~~47b665d8","in~~2024c179","in~58adcc70","in~58adcc59","in~~c2ab363b","in~76aa2c5","in~~10a5cba63","in~~9919913a","in~82617341","in~11b5642aa","in~11b56430c","in~~1341061ba","in~~2024c1cd","in~~10a5cbb09","in~~2024c156","in~~134106180","in~aa131782","in~14507c7c3","in~d3a49c7d","in~11b5642a4","in~~c2ab3517","in~76aa2c9","in~~71680ad0","in~~2024c1c6","in~~47b66678","in~~15ba2065c","in~~99199151","in~~99199168","in~~c2ab361a","in~14507c838","in~~1341061ac","in~58adcc11","in~~15ba20633","in~~47b6663c","in~~71680b39","in~14507c728","in~~15ba20670","in~~15ba206a3","in~~2024c233","in~76aa247","in~d3a49b8c","in~~10a5cbb42","in~~71680a90","in~aa1318ab","in~~134106263","in~58adcb94","in~82617203","in~~134106115","in~~71680c0c","in~11b5641d0","in~826171c3","in~58adcb40","in~~99199068","in~76aa22a","in~58adcb30","in~311c467c","in~58adcb85","in~~2024c249","in~826172a7","in~14507c7d2","in~~71680c19","in~~2024c085","in~~134106266","in~~10a5cbc2c","in~~71680bb9","in~~71680c2b","in~58adcb50","in~58adcb08","in~aa13163a","in~~1341062bb","in~~10a5cbc2d","in~~1341062c1","in~14507c641","in~~71680c30","in~~1341062c2","in~~99199081","in~11b56417b","in~11b564177"
+    "in~d3a49ca9","in~~9919912c","in~311c47dd","in~14507c7a6","in~~c2ab3610","in~~991990bc","in~~13410618d","in~~99199192","in~~134106156","in~311c4863","in~~15ba205db","in~311c4838","in~11b5642c7","in~~2024c18c","in~76aa307","in~8261735b","in~58adcc15","in~aa131896","in~826173c2","in~14507c7cd","in~58adcd07","in~~10a5cba6d","in~58adcbdb","in~~2024c1a8","in~~47b66667","in~14507c80b","in~76aa34a","in~14507c789","in~14507c784","in~11b564357","in~~c2ab364c","in~~c2ab3662","in~76aa392","in~~10a5cba77","in~8261729b","in~~10a5cbb14","in~14507c76b","in~311c4774","in~~47b66639","in~14507c77b","in~~47b66647","in~58adcc4a","in~~47b665d8","in~~2024c179","in~58adcc70","in~58adcc59","in~~c2ab363b","in~76aa2c5","in~~10a5cba63","in~~9919913a","in~82617341","in~11b5642aa","in~11b56430c","in~~1341061ba","in~~2024c1cd","in~~10a5cbb09","in~~2024c156","in~~134106180","in~aa131782","in~14507c7c3","in~d3a49c7d","in~11b5642a4","in~~c2ab3517","in~76aa2c9","in~~71680ad0","in~~2024c1c6","in~~47b66678","in~~15ba2065c","in~~99199151","in~~99199168","in~~c2ab361a","in~14507c838","in~~1341061ac","in~58adcc11","in~76aa35b","in~~2024c081","in~~134106132","in~~c2ab35d2","in~58adcc57","in~~13410619c","in~~71680aa0","in~d3a49cb0","in~58adcc36","in~aa1317cc","in~~10a5cbb29","in~~15ba205d1","in~~1341061b6","in~~1341061b5","in~~10a5cbb1d","in~d3a49c80","in~11b5642a5","in~~10a5cbac3","in~58adcbd2","in~58adcbda","in~~c2ab3690","in~~47b66670","in~~2024c1bc","in~~c2ab3695","in~~991991c8","in~~15ba20633","in~~47b6663c","in~~1341061cb","in~76aa2a6","in~d3a49c1a","in~~47b66699","in~311c4742","in~~99199207","in~311c472d","in~311c474b","in~~134106200","in~311c4724","in~~134106208","in~~991991c4","in~~134106220","in~~c2ab3675","in~311c488b","in~11b564274","in~~10a5cbb2d","in~~71680b39","in~8261728c","in~14507c728","in~~15ba20670","in~~15ba206a3","in~~15ba206bb","in~~15ba206a9","in~aa1316d4","in~~15ba2068a","in~8261726b","in~~2024c233","in~76aa24d","in~~47b666d5","in~76aa1d8","in~8261722b","in~76aa247","in~~2024c254","in~~99199258","in~311c4708","in~~c2ab35bb","in~~c2ab368c","in~d3a49b8c","in~311c4773","in~~71680b78","in~311c4703","in~~71680b65","in~311c4744","in~11b5642a0","in~~2024c207","in~76aa2b4","in~~10a5cbb42","in~~c2ab36a2","in~~99199206","in~11b564260","in~14507c6ca","in~~71680a90","in~~99199205","in~aa1318ab","in~~47b66709","in~~134106257","in~~c2ab3714","in~d3a49b66","in~aa1316dd","in~58adcb8b","in~~47b666c4","in~d3a49b94","in~d3a49bac","in~aa1316cc","in~~71680b93","in~~10a5cbb66","in~~c2ab36d5","in~aa1316c3","in~~15ba206c2","in~76aa221","in~~c2ab3671","in~~47b66716","in~76aa23c","in~82617226","in~82617217","in~~c2ab36d4","in~8261723d","in~~2024c255","in~d3a49ba1","in~d3a49b86","in~~15ba20658","in~~2024c247","in~14507c71d","in~~991991d0","in~~10a5cbb34","in~76aa273","in~~15ba20652","in~~99199217","in~76aa298","in~~1341061c6","in~~1341061c8","in~aa1316aa","in~~10a5cba3a","in~~10a5cbad8","in~~10a5cbba6","in~~10a5cbbb5","in~76aa21c","in~~c2ab36d9","in~14507c738","in~~15ba206d5","in~14507c6b7","in~d3a49b75","in~11b5641db","in~58adcb61","in~~15ba20690","in~76aa1c5","in~~134106263","in~58adcb79","in~aa1316d1","in~~15ba20672","in~~c2ab3721","in~~71680bbb","in~82617205","in~14507c695","in~11b56420d","in~82617246","in~58adcb94","in~82617203","in~~134106115","in~58adcc83","in~d3a49b80","in~~99199283","in~76aa200","in~~134106273","in~~71680c0c","in~826171d8","in~~1341061b2","in~311c46c9","in~11b5641d0","in~~2024c239","in~~99199233","in~76aa1d3","in~d3a49b43","in~58adcb4b","in~~134106259","in~~10a5cbba9","in~76aa1b3","in~826171d3","in~~10a5cbb79","in~~10a5cbbc9","in~~134106294","in~11b5641ba","in~~47b66722","in~~2024c242","in~d3a49b5a","in~826171c3","in~58adcb40","in~d3a49b3a","in~~2024c276","in~~47b66714","in~~71680ba6","in~~10a5cbbdd","in~~99199068","in~~71680bad","in~~13410624c","in~~10a5cbb76","in~~134106267","in~14507c68c","in~14507c6a9","in~~c2ab3708","in~76aa22a","in~76aa1d0","in~~10a5cbc11","in~~10a5cbc11","in~~10a5cbba4","in~~47b666dc","in~311c4671","in~58adcb30","in~311c467b","in~~47b6675b","in~~991992ab","in~~134106286","in~d3a49c4c","in~~99199277","in~~10a5cbb38","in~~71680c14","in~~13410629c","in~~15ba20749","in~~10a5cbb14","in~~71680bd5","in~311c467c","in~~2024c2aa","in~~71680b12","in~~47b66689","in~~2024c1d7","in~~2024c218","in~311c474a","in~~71680b3c","in~~47b6668a","in~~99199244","in~~2024c246","in~11b564276","in~~134106213","in~~15ba206a8","in~~10a5cbb61","in~11b564256","in~~c2ab36ad","in~76aa268","in~~9919921b","in~~134106216","in~~71680b69","in~~71680b92","in~76aa245","in~311c46d4","in~311c46d3","in~58adcb85","in~~2024c249","in~11b5641d1","in~~47b66730","in~aa131685","in~826172a7","in~76aa1c0","in~311c4665","in~11b564332","in~14507c7d2","in~11b564340","in~aa131666","in~11b5641a6","in~~71680c19","in~~134106253","in~~15ba20752","in~~2024c085","in~d3a49b5d","in~76aa1d7","in~~10a5cbc14","in~aa131655","in~~47b66750","in~76aa241","in~~2024c2a0","in~14507c681","in~aa131667","in~~134106266","in~11b5641a0","in~~15ba20741","in~~991992a7","in~~991992b1","in~~2024c2c1","in~~71680b61","in~76aa206","in~~10a5cbc2c","in~826171b0","in~~71680c29","in~aa131676","in~~71680bb9","in~d3a49b24","in~~c2ab3735","in~aa131652","in~14507c67b","in~aa131675","in~14507c65b","in~11b5641a9","in~~2024c27c","in~11b5641aa","in~d3a49b10","in~aa13163d","in~~15ba20753","in~d3a49b0b","in~d3a49b14","in~~991992c6","in~~15ba2076c","in~~71680c2b","in~~1341062c9","in~14507c647","in~82617199","in~~71680c38","in~58adcb50","in~~991992aa","in~76aa201","in~58adcb08","in~~991992c7","in~~47b66733","in~~10a5cbc25","in~aa131650","in~aa13163a","in~11b56418d","in~11b564191","in~~2024c2b8","in~311c4663","in~76aa1a2","in~~15ba2074d","in~~c2ab3781","in~~1341062bb","in~~991992c4","in~~10a5cbc2d","in~~1341062c1","in~~99199240","in~~71680b76","in~~991992cc","in~~47b6678c","in~311c4664","in~14507c641","in~~71680c30","in~aa13164b","in~~991992a4","in~~15ba20759","in~~15ba205c0","in~~2024c231","in~76aa1ac","in~11b5641b1","in~~47b6677d","in~58adcb36","in~aa13166b","in~~991992d1","in~~1341062c2","in~~99199081","in~14507c63b","in~~c2ab3786","in~11b564246","in~~99199278","in~11b56417b","in~aa131665","in~~71680b90","in~14507c666","in~aa131632","in~76aa20d","in~311c464b","in~311c4766","in~~c2ab3761","in~~71680c4c","in~11b564177","in~11b564172","in~d3a49ad8","in~~47b66782","in~11b56417c","in~11b564181","in~~c2ab3789","in~11b5642d2","in~311c4646"
 ]
 
 for code in LICENSE_CODES:
@@ -414,32 +403,24 @@ for code in LICENSE_CODES:
 
         # Step D: Extract Data
         try:
-            open_data_platform(driver, wait)
-            click_data_management(wait)
-            click_custom_events(wait)
-            
-            # CRITICAL: Wait for the table to actually load before starting extraction
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
-            time.sleep(1) 
+            click_users(wait)
 
-            custom_event_rows = extract_all_custom_events(driver, code)
+            users_rows = extract_users_reachability(driver, wait, code)
+            append_to_sheet(sheet, users_rows)
 
-            if custom_event_rows:
-                append_to_sheet(sheet, custom_event_rows)
-            else:
-                print(f"⚠️ No data found for {code}")
+            time.sleep(1)
+
+            users_rows = extract_users_reachability(driver, wait, code)
+
+            append_to_sheet(sheet, users_rows)
 
         except Exception as e:
-            error_msg = str(e)
-            print(f"❌ Failed to process {code}. Error: {error_msg}")
-
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="NAVIGATION_OR_EDIT",
-                error_reason=error_msg
+                stage="USERS_REACHABILITY",
+                error_reason=str(e)
             )
-
     
     finally:
         # Step E: Cleanup for next iteration

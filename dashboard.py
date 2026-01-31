@@ -19,7 +19,7 @@ def init_google_sheet():
     )
     client = gspread.authorize(creds)
 
-    sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Custome Event Script Data 3")
+    sheet = client.open_by_key("1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4").worksheet("Copy of Dashboard Global")
     return sheet
 
 try:
@@ -222,135 +222,145 @@ def click_edit(driver, wait, license_code):
     print("✅ Clicked the specific edit button")
 
 
-def open_data_platform(driver, wait):
-    print("⏳ Opening Data Platform menu...")
+def click_dashboards(wait):
+    print("⏳ Clicking Dashboards...")
 
-    data_platform_xpath = (
-        "//span[contains(@class,'menu__group__link') and .//span[text()='Data Platform']]"
-    )
-
-    element = wait.until(
-        EC.presence_of_element_located((By.XPATH, data_platform_xpath))
-    )
-
-    # 🟢 HOVER FIRST (important)
-    ActionChains(driver).move_to_element(element).pause(0.8).perform()
-
-    parent_li = element.find_element(By.XPATH, "./ancestor::li[contains(@class,'menu__group')]")
-
-    # 🟢 CLICK ONLY IF STILL COLLAPSED
-    if "open" not in parent_li.get_attribute("class"):
-        driver.execute_script("arguments[0].click();", element)
-        time.sleep(1)
-
-    print("✅ Data Platform menu ready")
-
-
-def click_data_management(wait):
-    print("⏳ Clicking Data Management...")
-
-    data_management_xpath = (
-        "//a[contains(@href,'/data-management/system/attributes') and .//span[text()='Data Management']]"
+    dashboard_xpath = (
+        "//a[contains(@href,'/custom-dashboard/list') and .//span[text()='Dashboards']]"
     )
 
     wait.until(
-        EC.element_to_be_clickable((By.XPATH, data_management_xpath))
+        EC.element_to_be_clickable((By.XPATH, dashboard_xpath))
     ).click()
 
-    print("✅ Clicked Data Management")
+    print("✅ Dashboards opened")
 
-def click_custom_events(wait):
-    print("⏳ Clicking Custom Events tab...")
-
-    custom_events_xpath = (
-        "//a[contains(@href,'/data-management/events/attributes') and normalize-space()='Custom Events']"
-    )
-
-    wait.until(
-        EC.element_to_be_clickable((By.XPATH, custom_events_xpath))
-    ).click()
-
-    print("✅ Custom Events opened")
-
-def extract_custom_events_page(driver, license_code):
-    rows_data = []
-    # Wait for at least one row to be present before scraping
+def wait_for_dashboard_table_or_empty(driver, timeout=8):
+    """
+    Waits for either:
+    - dashboard rows
+    - empty dashboard state
+    - pagination (even if empty)
+    Returns True if rows exist, False if NO_DATA
+    """
     try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table__row"))
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.CLASS_NAME, "table__row")
+                or d.find_elements(By.CLASS_NAME, "pagination")
+                or "No dashboards" in d.page_source
+            )
         )
     except:
-        return []
+        return False
 
-    rows = driver.find_elements(By.XPATH, "//tr[contains(@class,'table__row')]")
+    rows = driver.find_elements(By.CLASS_NAME, "table__row")
+    return len(rows) > 0
+
+def extract_dashboard_page(driver, license_code):
+    rows_data = []
+
+    rows = driver.find_elements(
+        By.XPATH,
+        "//tbody/tr[contains(@class,'table__row')]"
+    )
 
     for row in rows:
         try:
             cells = row.find_elements(By.XPATH, "./td")
-            if len(cells) < 8: continue 
+            if len(cells) < 5:
+                continue
 
-            # 1. Event Name 
-            event_name = cells[0].find_element(By.XPATH, ".//span[contains(@class,'text-ellipsis')]").get_attribute("title").strip()
+            # 1️⃣ Dashboard Name
+            dashboard_name = cells[0].find_element(
+                By.XPATH, ".//a"
+            ).get_attribute("title").strip()
 
-            # 2. Is PII / Data Type / Personalization
-            is_pii = cells[1].text.strip() or "NO"
-            data_type = cells[2].text.strip() or "NULL"
-            personalization = cells[3].text.strip() or "Disabled"
+            # 2️⃣ Cards Count
+            cards = cells[1].text.strip()
 
-            # 3. Status Columns (Website, Android, iOS, Others)
-            def get_status(cell):
-                try:
-                    return cell.find_element(By.CLASS_NAME, "status-label").text.strip()
-                except:
-                    return "NULL"
+            # 3️⃣ Last Updated
+            last_updated = cells[2].find_element(
+                By.XPATH, ".//span"
+            ).get_attribute("title").strip()
 
-            website = get_status(cells[4])
-            android = get_status(cells[5])
-            ios = get_status(cells[6])
-            others = get_status(cells[7])
+            # 4️⃣ Tags
+            try:
+                tags = ",".join([
+                    t.text.strip()
+                    for t in cells[3].find_elements(By.CLASS_NAME, "pill-text")
+                ])
+            except:
+                tags = ""
 
             rows_data.append([
-                license_code, event_name, is_pii, data_type, 
-                personalization, website, android, ios, others
+                license_code,
+                dashboard_name,
+                cards,
+                last_updated,
+                tags
             ])
+
         except Exception as e:
-            print(f"⚠️ Skipping a row due to error: {e}")
+            print(f"⚠️ Skipping dashboard row: {e}")
             continue
 
     return rows_data
 
-def extract_all_custom_events(driver, license_code):
-    print("📥 Extracting Custom Events (all pages)...")
+
+def extract_all_dashboards(driver, license_code):
+    print("📥 Extracting Dashboards (all pages)...")
+
+    has_data = wait_for_dashboard_table_or_empty(driver)
+
+    # 🔹 NO DATA FAST EXIT
+    if not has_data:
+        print("⚠️ No dashboards found — fast skipping")
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA"
+        ]]
+
     all_data = []
     page_number = 1
 
     while True:
-        print(f"📄 Scraping Page {page_number}...")
-        page_data = extract_custom_events_page(driver, license_code)
+        print(f"📄 Scraping Dashboard Page {page_number}...")
+        page_data = extract_dashboard_page(driver, license_code)
         all_data.extend(page_data)
 
         try:
-            # Check for the "Next" button link
-            next_parent = driver.find_element(By.XPATH, "//li[contains(@class,'pagination__next')]")
-            
-            # If the parent <li> has 'is-disabled', we are on the last page
-            if "is-disabled" in next_parent.get_attribute("class"):
-                print("🏁 Reached last page.")
+            next_li = driver.find_element(
+                By.XPATH,
+                "//li[contains(@class,'pagination__next')]"
+            )
+
+            if "is-disabled" in next_li.get_attribute("class"):
                 break
 
-            next_link = next_parent.find_element(By.TAG_NAME, "a")
+            next_link = next_li.find_element(By.TAG_NAME, "a")
             driver.execute_script("arguments[0].click();", next_link)
-            
-            # Short wait for the table to update
-            time.sleep(2)
+            time.sleep(1.5)
             page_number += 1
-            
-        except Exception as e:
-            print(f"ℹ️ Pagination ended or failed: {e}")
+
+        except:
             break
 
-    print(f"✅ Total Extracted: {len(all_data)} events")
+    if not all_data:
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA"
+        ]]
+
+    print(f"✅ Total Dashboards Extracted: {len(all_data)}")
     return all_data
+
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -375,7 +385,7 @@ def log_error_to_sheet(sheet, license_code, stage, error_reason):
 
 LICENSE_CODES = [
     
-    "in~311c4838","in~11b5642c7","in~8261735b","in~58adcc15","in~aa131896","in~826173c2","in~14507c7cd","in~58adcd07","in~~10a5cba6d","in~58adcbdb","in~~2024c1a8","in~~47b66667","in~14507c80b","in~76aa34a","in~14507c789","in~14507c784","in~11b564357","in~~c2ab364c","in~~c2ab3662","in~76aa392","in~~10a5cba77","in~8261729b","in~14507c76b","in~311c4774","in~~47b66639","in~14507c77b","in~~47b66647","in~58adcc4a","in~~47b665d8","in~~2024c179","in~58adcc70","in~58adcc59","in~~c2ab363b","in~76aa2c5","in~~10a5cba63","in~~9919913a","in~82617341","in~11b5642aa","in~11b56430c","in~~1341061ba","in~~2024c1cd","in~~10a5cbb09","in~~2024c156","in~~134106180","in~aa131782","in~14507c7c3","in~d3a49c7d","in~11b5642a4","in~~c2ab3517","in~76aa2c9","in~~71680ad0","in~~2024c1c6","in~~47b66678","in~~15ba2065c","in~~99199151","in~~99199168","in~~c2ab361a","in~14507c838","in~~1341061ac","in~58adcc11","in~~15ba20633","in~~47b6663c","in~~71680b39","in~14507c728","in~~15ba20670","in~~15ba206a3","in~~2024c233","in~76aa247","in~d3a49b8c","in~~10a5cbb42","in~~71680a90","in~aa1318ab","in~~134106263","in~58adcb94","in~82617203","in~~134106115","in~~71680c0c","in~11b5641d0","in~826171c3","in~58adcb40","in~~99199068","in~76aa22a","in~58adcb30","in~311c467c","in~58adcb85","in~~2024c249","in~826172a7","in~14507c7d2","in~~71680c19","in~~2024c085","in~~134106266","in~~10a5cbc2c","in~~71680bb9","in~~71680c2b","in~58adcb50","in~58adcb08","in~aa13163a","in~~1341062bb","in~~10a5cbc2d","in~~1341062c1","in~14507c641","in~~71680c30","in~~1341062c2","in~~99199081","in~11b56417b","in~11b564177"
+    "in~~15ba205d1","in~~10a5cbb1d","in~311c4742","in~311c4724","in~~991991c4","in~~134106220","in~311c488b","in~11b564274","in~14507c728","in~~15ba20670","in~~15ba2068a","in~~47b666d5","in~76aa1d8","in~76aa247","in~~99199258","in~~2024c207","in~~c2ab36a2","in~aa1318ab","in~d3a49bac","in~~c2ab3671","in~~47b66716","in~~991991d0","in~~10a5cbb34","in~76aa273","in~~99199217","in~76aa298","in~~1341061c6","in~d3a49b75","in~58adcb79","in~~15ba20672","in~~71680bbb","in~58adcb94","in~11b5641d0","in~d3a49b43","in~~10a5cbb79","in~826171c3","in~58adcb40","in~14507c6a9","in~76aa22a","in~~15ba20749","in~311c467c","in~~47b66689","in~~2024c1d7","in~~2024c218","in~~71680b3c","in~~47b6668a","in~~99199244","in~~c2ab36ad","in~76aa268","in~~9919921b","in~~134106216","in~~71680b92","in~76aa245","in~311c46d4","in~311c46d3","in~58adcb85","in~~2024c249","in~76aa1c0","in~11b564332","in~~71680c19","in~~15ba20752","in~~2024c2a0","in~14507c681","in~~2024c2c1","in~76aa206","in~aa131675","in~14507c65b","in~11b5641a9","in~d3a49b10","in~~71680c2b","in~58adcb50","in~~10a5cbc25","in~aa13163a","in~11b56418d","in~311c4663","in~~c2ab3781","in~~1341062bb","in~~991992c4","in~~10a5cbc2d","in~~1341062c1","in~~991992cc","in~14507c641","in~~71680c30","in~aa13164b","in~~15ba20759","in~~15ba205c0","in~~2024c231","in~~47b6677d","in~58adcb36","in~aa13166b","in~~991992d1","in~~1341062c2","in~~99199081","in~14507c63b","in~aa131665","in~~71680b90","in~14507c666","in~aa131632","in~76aa20d","in~311c464b","in~311c4766","in~~71680c4c","in~11b564172","in~~47b66782","in~11b564181"
 ]
 
 for code in LICENSE_CODES:
@@ -414,32 +424,28 @@ for code in LICENSE_CODES:
 
         # Step D: Extract Data
         try:
-            open_data_platform(driver, wait)
-            click_data_management(wait)
-            click_custom_events(wait)
-            
-            # CRITICAL: Wait for the table to actually load before starting extraction
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
-            time.sleep(1) 
+            click_dashboards(wait)
 
-            custom_event_rows = extract_all_custom_events(driver, code)
+            # Wait for dashboard table to load
+            dashboard_rows = extract_all_dashboards(driver, code)
+            append_to_sheet(sheet, dashboard_rows)
 
-            if custom_event_rows:
-                append_to_sheet(sheet, custom_event_rows)
-            else:
-                print(f"⚠️ No data found for {code}")
+            time.sleep(1)
+
+            dashboard_rows = extract_all_dashboards(driver, code)
+
+            append_to_sheet(sheet, dashboard_rows)
 
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Failed to process {code}. Error: {error_msg}")
+            print(f"❌ Dashboard extraction failed for {code}: {error_msg}")
 
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="NAVIGATION_OR_EDIT",
+                stage="DASHBOARD_EXTRACTION",
                 error_reason=error_msg
             )
-
     
     finally:
         # Step E: Cleanup for next iteration
