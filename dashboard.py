@@ -15,7 +15,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 def init_google_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Python Script/agreement_file_pasting/mycred-googlesheet.json", scopes=scopes
+        "/Users/admin/Desktop/Product_Adaption_Data/Credential File/mycred-googlesheet.json", scopes=scopes
     )
     client = gspread.authorize(creds)
 

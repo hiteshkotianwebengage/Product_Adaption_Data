@@ -15,7 +15,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 def init_google_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Python Script/agreement_file_pasting/mycred-googlesheet.json", scopes=scopes
+        "/Users/admin/Desktop/Product_Adaption_Data/Credential File/mycred-googlesheet.json", scopes=scopes
     )
     client = gspread.authorize(creds)
 
@@ -223,27 +223,56 @@ def click_edit(driver, wait, license_code):
 
 
 def open_data_platform(driver, wait):
-    print("⏳ Opening Data Platform menu...")
+    print("⏳ Opening Data Platform sidebar (hybrid React-safe)...")
 
-    data_platform_xpath = (
-        "//span[contains(@class,'menu__group__link') and .//span[text()='Data Platform']]"
+    li = wait.until(
+        EC.presence_of_element_located((By.ID, "nav-data-platform"))
     )
 
-    element = wait.until(
-        EC.presence_of_element_located((By.XPATH, data_platform_xpath))
-    )
+    head = li.find_element(By.XPATH, ".//div[contains(@class,'menu__group__head')]")
 
-    # 🟢 HOVER FIRST (important)
-    ActionChains(driver).move_to_element(element).pause(0.8).perform()
+    # Always scroll first
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", head)
+    time.sleep(0.2)
 
-    parent_li = element.find_element(By.XPATH, "./ancestor::li[contains(@class,'menu__group')]")
+    # 1️⃣ Try normal JS click (React listener)
+    driver.execute_script("arguments[0].click();", head)
+    time.sleep(0.5)
 
-    # 🟢 CLICK ONLY IF STILL COLLAPSED
-    if "open" not in parent_li.get_attribute("class"):
-        driver.execute_script("arguments[0].click();", element)
-        time.sleep(1)
+    # 2️⃣ Check if React actually opened it
+    class_now = li.get_attribute("class")
+    if "menu__group--is-active" in class_now:
+        print("✅ Data Platform opened via click")
+        return
 
-    print("✅ Data Platform menu ready")
+    print("⚠️ Click did not open menu, forcing state...")
+
+    # 3️⃣ Force class (DOM state)
+    driver.execute_script("""
+        arguments[0].classList.add('menu__group--is-active');
+    """, li)
+
+    # 4️⃣ Dispatch synthetic click event (React fallback)
+    driver.execute_script("""
+        arguments[0].dispatchEvent(
+            new MouseEvent('click', { bubbles: true })
+        );
+    """, head)
+
+    time.sleep(0.5)
+
+    # Final confirmation
+    if "menu__group--is-active" in li.get_attribute("class"):
+        print("✅ Data Platform opened via hybrid fallback")
+    else:
+        raise Exception("❌ Failed to open Data Platform sidebar")
+    
+def go_to_custom_events(driver, wait, account_id):
+    url = f"https://dashboard.in.webengage.com/accounts/{account_id}/data-management/events/attributes"
+    driver.get(url)
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
+    print("✅ Landed on Custom Events")
+
 
 
 def click_data_management(wait):
@@ -275,11 +304,9 @@ def click_custom_events(wait):
 def extract_custom_events_page(driver, license_code):
     rows_data = []
     # Wait for at least one row to be present before scraping
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "table__row"))
-        )
-    except:
+    has_data = wait_for_table_or_empty(driver)
+
+    if not has_data:
         return []
 
     rows = driver.find_elements(By.XPATH, "//tr[contains(@class,'table__row')]")
@@ -350,7 +377,23 @@ def extract_all_custom_events(driver, license_code):
             break
 
     print(f"✅ Total Extracted: {len(all_data)} events")
+
+    if not all_data:
+        print("⚠️ No custom events found — inserting NO_DATA row")
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA"
+        ]]
+
     return all_data
+
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -372,10 +415,31 @@ def log_error_to_sheet(sheet, license_code, stage, error_reason):
 
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
+def wait_for_table_or_empty(driver, timeout=6):
+    """
+    Waits for:
+    - table rows
+    - empty state
+    Returns True if rows exist, False otherwise
+    """
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//tr[contains(@class,'table__row')]")
+                or "No data" in d.page_source
+            )
+        )
+    except:
+        return False
+
+    rows = driver.find_elements(By.XPATH, "//tr[contains(@class,'table__row')]")
+    return len(rows) > 0
+
+
 
 LICENSE_CODES = [
     
-    "in~311c4838","in~11b5642c7","in~8261735b","in~58adcc15","in~aa131896","in~826173c2","in~14507c7cd","in~58adcd07","in~~10a5cba6d","in~58adcbdb","in~~2024c1a8","in~~47b66667","in~14507c80b","in~76aa34a","in~14507c789","in~14507c784","in~11b564357","in~~c2ab364c","in~~c2ab3662","in~76aa392","in~~10a5cba77","in~8261729b","in~14507c76b","in~311c4774","in~~47b66639","in~14507c77b","in~~47b66647","in~58adcc4a","in~~47b665d8","in~~2024c179","in~58adcc70","in~58adcc59","in~~c2ab363b","in~76aa2c5","in~~10a5cba63","in~~9919913a","in~82617341","in~11b5642aa","in~11b56430c","in~~1341061ba","in~~2024c1cd","in~~10a5cbb09","in~~2024c156","in~~134106180","in~aa131782","in~14507c7c3","in~d3a49c7d","in~11b5642a4","in~~c2ab3517","in~76aa2c9","in~~71680ad0","in~~2024c1c6","in~~47b66678","in~~15ba2065c","in~~99199151","in~~99199168","in~~c2ab361a","in~14507c838","in~~1341061ac","in~58adcc11","in~~15ba20633","in~~47b6663c","in~~71680b39","in~14507c728","in~~15ba20670","in~~15ba206a3","in~~2024c233","in~76aa247","in~d3a49b8c","in~~10a5cbb42","in~~71680a90","in~aa1318ab","in~~134106263","in~58adcb94","in~82617203","in~~134106115","in~~71680c0c","in~11b5641d0","in~826171c3","in~58adcb40","in~~99199068","in~76aa22a","in~58adcb30","in~311c467c","in~58adcb85","in~~2024c249","in~826172a7","in~14507c7d2","in~~71680c19","in~~2024c085","in~~134106266","in~~10a5cbc2c","in~~71680bb9","in~~71680c2b","in~58adcb50","in~58adcb08","in~aa13163a","in~~1341062bb","in~~10a5cbc2d","in~~1341062c1","in~14507c641","in~~71680c30","in~~1341062c2","in~~99199081","in~11b56417b","in~11b564177"
+    "in~~15ba205d1","in~~10a5cbb1d","in~311c4742"
 ]
 
 for code in LICENSE_CODES:
@@ -397,7 +461,6 @@ for code in LICENSE_CODES:
             else:
                 print("ℹ️ Access already available. Moving to Edit.")
                 # If dropdown is open but we don't need it, refresh or Esc
-                ActionChains(driver).send_keys(Keys.ESCAPE).perform() 
         except Exception as e:
             print(f"⚠️ Access step skipped: {e}")
 
@@ -414,20 +477,17 @@ for code in LICENSE_CODES:
 
         # Step D: Extract Data
         try:
-            open_data_platform(driver, wait)
-            click_data_management(wait)
-            click_custom_events(wait)
+            # open_data_platform(driver, wait)
+            # click_data_management(wait)
+            # click_custom_events(wait)
             
-            # CRITICAL: Wait for the table to actually load before starting extraction
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
-            time.sleep(1) 
+            # We are not using above three as im unable to open sidebar so we will directly use the url 
+            account_id = code  # same as license code in your case
+
+            go_to_custom_events(driver, wait, account_id)
 
             custom_event_rows = extract_all_custom_events(driver, code)
-
-            if custom_event_rows:
-                append_to_sheet(sheet, custom_event_rows)
-            else:
-                print(f"⚠️ No data found for {code}")
+            append_to_sheet(sheet, custom_event_rows)
 
         except Exception as e:
             error_msg = str(e)
@@ -436,10 +496,9 @@ for code in LICENSE_CODES:
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="NAVIGATION_OR_EDIT",
+                stage="CUSTOM_EVENTS",
                 error_reason=error_msg
             )
-
     
     finally:
         # Step E: Cleanup for next iteration

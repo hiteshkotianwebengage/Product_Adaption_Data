@@ -15,7 +15,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 def init_google_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Python Script/agreement_file_pasting/mycred-googlesheet.json", scopes=scopes
+        "/Users/admin/Desktop/Product_Adaption_Data/Credential File/mycred-googlesheet.json", scopes=scopes
     )
     client = gspread.authorize(creds)
 
@@ -223,27 +223,31 @@ def click_edit(driver, wait, license_code):
 
 
 def open_data_platform(driver, wait):
-    print("⏳ Opening Data Platform menu...")
+    print("⏳ Ensuring Data Platform menu is open...")
 
-    data_platform_xpath = (
-        "//span[contains(@class,'menu__group__link') and .//span[text()='Data Platform']]"
+    data_platform_li = wait.until(
+        EC.presence_of_element_located((By.ID, "nav-data-platform"))
     )
 
-    element = wait.until(
-        EC.presence_of_element_located((By.XPATH, data_platform_xpath))
-    )
+    class_attr = data_platform_li.get_attribute("class")
 
-    # 🟢 HOVER FIRST (important)
-    ActionChains(driver).move_to_element(element).pause(0.8).perform()
+    if "menu__group--is-active" not in class_attr:
+        print("🔓 Opening Data Platform sidebar via JS")
+        driver.execute_script(
+            "arguments[0].classList.add('menu__group--is-active');",
+            data_platform_li
+        )
+        time.sleep(0.5)
+    else:
+        print("✅ Data Platform already open")
 
-    parent_li = element.find_element(By.XPATH, "./ancestor::li[contains(@class,'menu__group')]")
+def go_to_revenue_mapping(driver, wait, account_id):
+    url = f"https://dashboard.in.webengage.com/accounts/{account_id}/data-management/events/revenue"
+    driver.get(url)
 
-    # 🟢 CLICK ONLY IF STILL COLLAPSED
-    if "open" not in parent_li.get_attribute("class"):
-        driver.execute_script("arguments[0].click();", element)
-        time.sleep(1)
-
-    print("✅ Data Platform menu ready")
+    # wait for rows OR empty state
+    wait_for_revenue_or_empty(driver)
+    print("✅ Landed on Revenue Mapping (via URL)")
 
 
 def click_data_management(wait):
@@ -280,7 +284,6 @@ def extract_revenue_mapping_data(driver, wait, license_code):
         EC.presence_of_element_located((By.ID, "we-account-name"))
     ).text.strip()
 
-    # Currency (safe wait)
     try:
         currency = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((
@@ -291,71 +294,59 @@ def extract_revenue_mapping_data(driver, wait, license_code):
     except:
         currency = "NULL"
 
+    # ⏳ Wait briefly for rows OR empty state
+    has_data = wait_for_revenue_or_empty(driver)
 
-    # ✅ ONLY real revenue mapping rows
+    if not has_data:
+        print("⚠️ No Revenue Mapping found — inserting NO_DATA row")
+        return [[
+            license_code,
+            account_name,
+            currency,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            ""
+        ]]
+
     rows = driver.find_elements(
         By.XPATH,
         "//div[contains(@class,'row') and .//i[contains(@class,'fl-delete')]]"
     )
 
-    if not rows:
-        print("⚠️ No Revenue Mapping data found")
+    for row in rows:
+        try:
+            dropdowns = row.find_elements(By.XPATH, ".//div[contains(@class,'r-ss-trigger')]")
+            if len(dropdowns) >= 2:
+                event_name = dropdowns[0].text.strip()
+                attribute_name = dropdowns[1].text.strip()
+
+                data_rows.append([
+                    license_code,
+                    account_name,
+                    currency,
+                    event_name,
+                    attribute_name,
+                    "SUCCESS",
+                    ""
+                ])
+        except:
+            continue
+
+    if not data_rows:
         return [[
             license_code,
             account_name,
             currency,
-            "NULL",
-            "NULL",
+            "NO_DATA",
+            "NO_DATA",
             "NO_DATA",
             ""
         ]]
 
-    for row in rows:
-        try:
-            dropdowns = row.find_elements(By.XPATH, ".//div[contains(@class,'r-ss-trigger')]")
-            if len(dropdowns) >= 2:
-                event_name = dropdowns[0].text.strip()
-                attribute_name = dropdowns[1].text.strip()
-
-                data_rows.append([
-                    license_code,
-                    account_name,
-                    currency,
-                    event_name,
-                    attribute_name,
-                    "SUCCESS",
-                    ""
-                ])
-        except:
-            continue
-
     print(f"✅ Extracted {len(data_rows)} revenue mappings")
     return data_rows
 
-
-    # Extract rows if present
-    for row in rows:
-        try:
-            dropdowns = row.find_elements(By.XPATH, ".//div[contains(@class,'r-ss-trigger')]")
-            if len(dropdowns) >= 2:
-                event_name = dropdowns[0].text.strip()
-                attribute_name = dropdowns[1].text.strip()
-
-                data_rows.append([
-                    license_code,
-                    account_name,
-                    currency,
-                    event_name,
-                    attribute_name,
-                    "SUCCESS",
-                    ""
-                ])
-
-        except:
-            continue
-
-    print(f"✅ Extracted {len(data_rows)} revenue mappings")
-    return data_rows
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -379,6 +370,19 @@ def log_error_to_sheet(sheet, license_code, error_reason):
 
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
+def wait_for_revenue_or_empty(driver, timeout=6):
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//i[contains(@class,'fl-delete')]")
+                or "No data" in d.page_source
+            )
+        )
+    except:
+        return False
+
+    rows = driver.find_elements(By.XPATH, "//i[contains(@class,'fl-delete')]")
+    return len(rows) > 0
 
 # Here we start to loop in the LC in the site 
 
@@ -422,14 +426,27 @@ for code in LICENSE_CODES:
         print(f"↔️ Switched to Edit tab for {code}")
 
         # Step D: Extract Data
-        open_data_platform(driver, wait)
-        click_data_management(wait)
-        click_revenue_mapping(wait)
-        
+        # open_data_platform(driver, wait)
+        # click_data_management(wait)
+        # click_revenue_mapping(wait)
+
+        # We are not using above three as im unable to open sidebar so we will directly use the url 
+        account_id = code
+
+        go_to_revenue_mapping(driver, wait, account_id)
+
+        WebDriverWait(driver, 10).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//i[contains(@class,'fl-delete')]")
+                or "No data" in d.page_source
+            )
+        )
+
         rows = extract_revenue_mapping_data(driver, wait, code)
         append_to_sheet(sheet, rows)
 
         print(f"✅ Success for {code}")
+
 
     except Exception as e:
         error_msg = str(e)
