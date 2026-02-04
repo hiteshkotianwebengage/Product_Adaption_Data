@@ -3,7 +3,7 @@
     1) Below Client inside init_google_sheet function change the sheet name
     2) In the step 0 below the Driver varibale change between driver.get 
     3) In the step 2 while direct url for publisher change between driver.get
-    4) Inside the go_to_custom_events function we switch between the url
+    4) Inside the go_to_Alert_events function we switch between the url
     5) In the step 5 we have urls to directly go to publisher after data is fetching
     6) This is pretty main we have to change the LC based on the global, india, ksa
 '''
@@ -37,26 +37,26 @@ REGION = "INDIA"   # options: "INDIA", "GLOBAL", "KSA"
 REGION_CONFIG = {
     "INDIA": {
         "base_url": "https://dashboard.in.webengage.com",
-        "sheet_name": "Custom Event India 2",
+        "sheet_name": "Alert Event India",
         "publisher_url": "https://dashboard.in.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "in~~47b665d8","in~~2024c179","in~58adcc70","in~58adcc59","in~~c2ab363b","in~~10a5cba63","in~~9919913a","in~82617341","in~11b5642aa","in~~1341061ba","in~~10a5cbb09","in~~2024c156","in~~134106180","in~d3a49c7d","in~~71680ad0","in~~2024c1c6","in~~47b66678","in~~15ba2065c","in~~99199168","in~~c2ab361a","in~~1341061ac","in~~47b6663c","in~~71680b39","in~14507c728","in~~15ba20670","in~~2024c233","in~76aa247","in~d3a49b8c","in~~71680a90","in~aa1318ab","in~~134106263","in~58adcb94","in~~134106115","in~~71680c0c","in~11b5641d0","in~826171c3","in~58adcb40","in~76aa22a","in~311c467c","in~58adcb85","in~~2024c249","in~826172a7","in~14507c7d2","in~~71680c19","in~~2024c085","in~~71680c2b","in~~1341062bb","in~~10a5cbc2d","in~~1341062c1","in~14507c641","in~~71680c30","in~~1341062c2","in~~99199081","in~11b56417b","in~11b564177"
+            "in~~71680c2b","in~~1341062c9","in~14507c647","in~82617199","in~~71680c38","in~58adcb50","in~~991992aa","in~76aa201","in~58adcb08","in~~991992c7","in~~47b66733","in~~10a5cbc25","in~aa131650","in~aa13163a","in~11b56418d","in~11b564191","in~~2024c2b8","in~311c4663","in~76aa1a2","in~~15ba2074d","in~~c2ab3781","in~~1341062bb","in~~991992c4","in~~10a5cbc2d","in~~1341062c1","in~~99199240","in~~71680b76","in~~991992cc","in~~47b6678c","in~311c4664","in~14507c641","in~~71680c30","in~aa13164b","in~~991992a4","in~~15ba20759","in~~15ba205c0","in~~2024c231","in~76aa1ac","in~11b5641b1","in~~47b6677d","in~58adcb36","in~aa13166b","in~~991992d1","in~~1341062c2","in~~99199081","in~14507c63b","in~~c2ab3786","in~11b564246","in~~99199278","in~11b56417b","in~aa131665","in~~71680b90","in~14507c666","in~aa131632","in~76aa20d","in~311c464b","in~311c4766","in~~c2ab3761","in~~71680c4c","in~11b564177","in~11b564172","in~d3a49ad8","in~~47b66782","in~11b56417c","in~11b564181","in~~c2ab3789","in~11b5642d2","in~311c4646"
         ]
     },
     "GLOBAL": {
         "base_url": "https://dashboard.webengage.com",
-        "sheet_name": "Custom Event Global 2",
+        "sheet_name": "Alert Event Global",
         "publisher_url": "https://dashboard.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "82618947"
+            "~47b6574d","d3a4ab38","~47b66864","76aac96","8261829c","~10a5cad0b","58add307","~10a5cabbb","58add216","~10a5cb2a9","~2024b5d8","d3a4a457","311c5625","~134105a60","58add423","311c5642","14507cd00","d3a4a301","~15ba20153","d3a4ac1c","~1341059b6","~10a5cab6a","14507cd51","~15ba1d846","~10a5cac40","~7167db84","14507cc77","58add283","99198968","~15ba1da68","14507cda4","58add2d9","~134105a52","~7167db54","~47b66064","76aa813","~716800b0","aa13266b","826174d0","~47b65b6c","82617c25","~47b6607a","~15ba2020b","82617894","82617822","76aa800","~c2ab3242","~15ba1d691","~10a5cb63c","~c2ab3108","~134105a8c","76ab0a5","~c2ab2dd0","~15ba20105","82617757","aa131c59","311c4b69","~2024bb2d","~134105a04","14507cd4d","~13410604b","76aa78b","~71680543","~2024b99a","~71680588","~9919839a","aa131c84","76aa858","~134105251","~99198a20","~1341056a0","~2024b6c6","~15ba20116","76aa833","~991983db","76aa7a3","14507cba6","14507d14d","~71680655","82617754","~2024bb10","~c2ab2851","~99198b61","~10a5cb5d1","~10a5cb677","~10a5cb557","~c2ab313b","~134105965","~1341059c5","58adc5c7","~7168057d","~99198ab8","~15ba1ddc6","~47b65848","d3a4a32d","311c4c4b","~47b66045","~15ba201a6","76aa124","~9919868d","76a9c30","~311c4b76","58adca91","76aa76b","82617b34","~2024bada","d3a4a403","8261827a","~71680577","~99198a29","~2024bad5","~2024b291","58add69d","~134105b84","d3a4a6dd","311c558d","~c2ab3033","~15ba1ddc2","82618089","58add346","~1341061bb","d3a4a69c","58add2da","~716805d8","~15ba20214","~10a5cb6b0","~1341056bb","aa132703","~aa1321c5","~c2ab2c0c","~9919871c","~47b66614","~991981d3","14507cc74","8261786b","11b564b69","aa132225","311c4c14","311c4c11","76aa762","311c4bbb","14507cba8","58add7aa","11b564830","76aac69","76aab88","~71680627","~15ba20042","~oldetmoney","11b564720","~c2ab275a","~c2ab2bc0","~15ba1d70a","~c2ab2ba2","8261812c","~47b6665c","~1341059cb","~991989d1","~old2024c085","d3a4a36a","~10a5cac99","~oldmagma1","~oldmagma2","~oldmagma3","11b56527d","11b5646ca","~c2ab2c08","~11b5646b8","~d3a4a286","76aa7c6","76aa85d","~2024ba8b","~47b65b94","~7168053d","~c2ab3083","58addc40","76aa844","~d3a49c4c-old","76aa868","d3a4a663","~15ba2019a","~7168069d","~oldrangde","~10a5cb533","~10a5cb636","~c2ab26b8","~99198226","~2024bbb6","~99198a14","82617775","~134105aac","11b56470b","aa13264a","~c2ab3042","~99198a18","11b5650c0","311c4bc4","d3a4a420","~10a5cb20c","14507cc0a","~15ba1db98","~14507ccb9","~134105a45","~15ba200d7","~11b564836","~14507ccc0","aa131c70","~47b661c8","~7168071b","~10a5cb278","~2024bb90","~82617869","~oldUPES","14507cba1","d3a4a72a","~71680632","~47b65a1c","82617779","~10a5cb53d","311c4d24","58add3a2","~47b660d4","~134105732","~9919837c","~311c4dc3","~2024bb26","~76aab32","~c2ab323a","old~2024c1a3","826182a0","~10a5cb24b","11b56488a","~15ba20234","~15ba2063d","~47b661ab","~47b65875","99198624","14507cd97","~134105353","d3a4ab04","~ c2ab260c","~47b66257","~c2ab3091","~c2ab30aa","~15ba20080","d3a4a3b7","~aa131bd4","~134105b82","~134105a36","58add667","~47b65c2a","311c4b7c","aa131752","11b564bc3","82617bba","~716802a1","~14507d169","~d3a4a64d","~aa1321a1","~716802d0","~7168026d","~15ba1db9b","~2024b725","~2024b72c","~7168028a","~47b65bd8","~99199107","~oldid","~2024b7a2","aa132182","~10a5cb319","~15ba1dbd6","~10a5cb2a0","~1341056c2","~2024b80a","aa13210d","~11b564252","~47b65c27","14507d197","14507d153","~aa131717","311c5166","~15ba1dc69","~10a5cb33d","~c2ab2c5d","~82616dd3","~14507c905","~58adc916","~11b563c29","~311c4664","~c2ab3c28","~7167db9d","~99198b2b","~oldedelwiess","~2024b1c1","~10a5cb621","~15ba20147","~15ba1dc2d","~10a5cb283","82617aac","old~10a5cbb38","58addb9c","58adcba4","~oldsasai","~ c2ab36a7","~9919922b","~15ba1dd60","~9919879c","~15ba1dda1","~716803a0","~10a5cb41b","82617a35","~71680426","~15ba206bc","~teamGreatLearning","old~7167d2da","~10a5cb41c","d3a4b631","~c2ab3713","d3a4a554","old~76aab14","58add639","~2024b6b1","~716802c1","~c2ab2d61","~47b65736","aa132108","~13410583d","~716806c3","58add571","old~1341061b2","~2024b742","~15ba2009b","~2024b7a6","~47b65ca0","d3a4a5c9","~82617225","76abb05","~15ba1cc68","~134105ba0","82617a1a","~2024b8a7","~82617957","76aab70","d3a49b72","~10a5cac62","~991988b2","14507d028","~10a5cb41c","d3a4a4aa","311c5128","~oldaccount","82618240","76abad2","~47b66522","~15ba1cc70","~15ba20218","~7167d2da","~47b66119","~716805b9","14507d167","76aa239","14507d0c5","11b565a86","aa133168","~15ba201dc","~1341047d4","~716806db","~47b65c58","~10a5cb29d","~10a5cbb86","aa1318a4","~15ba20712","~2024a7ad","aa133154","d3a4a4c6","311c561d","~716801dd","~58add514","~2024b7a3","~71680374","~9919835a","~82617a45","d3a4a292","~9919779b","311c6080","~7167d365","~9919921c","~716806cb","76aab70","~47b666aa","~2024a7c9","~134104786","~71680bc5","76aa235","~2024b77c","~1341047d6","311c6141","d3a4b607","11b565a2a","82618a47","~10a5ca344","11b565a4b","~76aa276","~13410606b","~2024c07d","58b005a5","76ab982","58add2d9","14507d153","~47b66726","1450800cc","82618a78","76aba82","~99197808","~9919786b","76ab099","~99197879","~c2ab1d22","~134105365","~7167dd04","aa133088","~15ba20518","~11b565a1","~c2ab1d64","~99197854","d3a4a339","~c2ab3737","~134105770","~82618284","11b564400","58b005b2","76aab2b","311c6114","~15ba1cd7b","~15ba1cd57","8261895b","~2024a872","~47b64d14","~145080099","~2024a898","~10a5cb63c","~2024bb10","~99197908","~10a5cbbc3","311c6137","~145080038","d3a4b4bc","11b56595a","~10a5cbb7a","d3a4a3d2","311c617c","~1341058da","~15ba1dd60","~15ba1cd06","311c6067","~10a5cb5d1","~7167d43b","11b56597b","76ab9b6","76ab933","76aa777","76aab14","~15ba1cc97","145080012","~47b64db3","76ab966","~134104915","~9919792b","76ab97b","d3a4b5a8","145080010","~2024a887","145080030","~47b64d1c","~47b64dc6","11b565a3b","d3a4b4a3","~2024ba16","~c2ab3054","~99197905","~10a5cb448","~2024a920","~c2ab1db9","311c6015","76ab975","~2024a932","~99197925","~7167d473","~10a5ca45d","d3a4b49c","58b00497","~2024a938","d3a4b48c","~7167d481","~amplicom","~15ba1cda8","82618947.0","~TapsiMarket","58b004a0","~15ba1cdc0","~134104929","~GreenlifeEwaste","311c5018","~15ba1cd29","76ab953","~7167d478","11b565ab8","d3a4b501","311c6036","aa133008","~2024a928","76ab919","~15ba1cdc7","311c6106","~2024a8d9","~7167d459","~47b64dcd","76ab94b","~10a5ca413","~c2ab1d61","~47b64d69","11b565933","aa13306d","14507ddc0","76ab948","~99197942","311c601a","311c5ddd","~15ba1cd71","11b56593a","14507ddd3","58add3d1","~c2ab3a30","58b00572","d3a4b47a","58b00482","~10a5ca49a","58b0047d","aa131b8b","~134104910","~10a5cb607","~7167d4a7","311c50c2","76ab96b","~13410487b","311c50ac","~99198826","76aab90","311c4c52","~71680307","~15ba1dcd4","~47b64d09","~99198b33","~c2ab1d11","d3a4a33c","~c2ab1dda","aa132dcb","76ab943","58b00487","11b565931","~134104942","aa132dc1","~15ba1d007","~134104952","76ab929","~1341053c6","d3a4b479","aa132dac","~c2ab1dc3","11b565915","76ab940","58add629","~47b64c57","~2024a96d","~7167d309","311c6107","~c2ab2d96","aa131c6a","~7167d4b3","~7168061a","76ab912","~2024a973","311c5dac","~134104968","~2024a7c4","58b00457","76ab922","~7167d4b4","~10a5ca4a2"
         ]
     },
     "KSA": {
         "base_url": "https://dashboard.ksa.webengage.com",
-        "sheet_name": "Custom Event KSA",
+        "sheet_name": "Alert Event KSA",
         "publisher_url": "https://dashboard.ksa.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "ksa~aa131893","ksa~~15ba20531","ksa~76aa3da","ksa~~2024c091","ksa~826173dc","ksa~82617401","ksa~aa131890","ksa~14507c89c","ksa~~10a5cb9d1","ksa~~2024c08d","ksa~~47b66522"
+            "ksa~~15ba20526","ksa~82617412","ksa~~716809b4","ksa~14507c890","ksa~~2024c070","ksa~76aa41c","ksa~~716809bd","ksa~11b564409","ksa~~47b6652a","ksa~aa1318a1","ksa~~47b6652c","ksa~58adcd4c","ksa~11b564406","ksa~~15ba2051c","ksa~aa131897","ksa~~134106071","ksa~82617408","ksa~58adcd55","ksa~~15ba20523","ksa~~10a5cb9bd","ksa~d3a49d49","ksa~11b5643db","ksa~d3a49d4a","ksa~d3a49d44","ksa~58adcd54","ksa~aa13189b","ksa~311c489a","ksa~82617404","ksa~~2024c08a","ksa~~134106076","ksa~14507c891","ksa~~716809c9","ksa~d3a49d46","ksa~~47b66537","ksa~~134106074","ksa~~2024c07d","ksa~~2024c085","ksa~82617402","ksa~~13410607a","ksa~11b564403","ksa~~716809ba","ksa~~10a5cb9c4","ksa~~99199078","ksa~~15ba20518","ksa~~134106069","ksa~311c4892","ksa~~99199083","ksa~aa1318a0","ksa~~13410606b","ksa~11b5643d5","ksa~~134106080","ksa~58adcd47","ksa~58adcd44","ksa~11b5643d3","ksa~826173db","ksa~d3a49d41","ksa~~134106084","ksa~~99199073","ksa~~99199087","ksa~aa131893","ksa~~15ba20531","ksa~76aa3da","ksa~~2024c091","ksa~826173dc","ksa~82617401","ksa~aa131890","ksa~14507c89c","ksa~~10a5cb9d1","ksa~~2024c08d","ksa~~47b66522"
         ]
     }
 }
@@ -71,7 +71,7 @@ def init_google_sheet():
 
     sheet_name = REGION_CONFIG[REGION]["sheet_name"]
     sheet = client.open_by_key(
-        "1aw7c-PMc0wv5_QOcQdijEQFxcf9rzFN4vAo9HamVlDw"
+        "1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4"
     ).worksheet(sheet_name)
 
     return sheet
@@ -339,15 +339,23 @@ def open_data_platform(driver, wait):
     else:
         raise Exception("❌ Failed to open Data Platform sidebar")
     
-def go_to_custom_events(driver, wait, account_id):
+def go_to_alerts(driver, wait, account_id):
     base_url = REGION_CONFIG[REGION]["base_url"]
-    url = f"{base_url}/accounts/{account_id}/data-management/events/attributes"
+    url = f"{base_url}/accounts/{account_id}/alerts"
 
     driver.get(url)
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "table__row")))
-    print("✅ Landed on Custom Events")
+    time.sleep(2)  # critical for modal detection
 
+def is_alerts_locked(driver):
+    # modal visible
+    if "Locked feature" in driver.page_source:
+        return True
 
+    # redirected silently (very common)
+    if not driver.current_url.endswith("/alerts"):
+        return True
+
+    return False
 
 def click_data_management(wait):
     print("⏳ Clicking Data Management...")
@@ -362,20 +370,32 @@ def click_data_management(wait):
 
     print("✅ Clicked Data Management")
 
-def click_custom_events(wait):
-    print("⏳ Clicking Custom Events tab...")
+def click_Alert_events(wait):
+    print("⏳ Clicking Alert Events tab...")
 
-    custom_events_xpath = (
-        "//a[contains(@href,'/data-management/events/attributes') and normalize-space()='Custom Events']"
+    Alert_events_xpath = (
+        "//a[contains(@href,'/data-management/events/attributes') and normalize-space()='Alert Events']"
     )
 
     wait.until(
-        EC.element_to_be_clickable((By.XPATH, custom_events_xpath))
+        EC.element_to_be_clickable((By.XPATH, Alert_events_xpath))
     ).click()
 
-    print("✅ Custom Events opened")
+    print("✅ Alert Events opened")
 
-def extract_custom_events_page(driver, license_code):
+def wait_for_alerts_ready(driver, timeout=8):
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                "Locked feature" in d.page_source
+                or "/alerts" in d.current_url
+            )
+        )
+        return True
+    except:
+        return False
+
+def extract_Alert_events_page(driver, license_code):
     rows_data = []
     # Wait for at least one row to be present before scraping
     has_data = wait_for_table_or_empty(driver)
@@ -420,54 +440,78 @@ def extract_custom_events_page(driver, license_code):
 
     return rows_data
 
-def extract_all_custom_events(driver, license_code):
-    print("📥 Extracting Custom Events (all pages)...")
-    all_data = []
-    page_number = 1
+def extract_alerts(driver, license_code):
+    print("📥 Extracting Alerts...")
 
-    while True:
-        print(f"📄 Scraping Page {page_number}...")
-        page_data = extract_custom_events_page(driver, license_code)
-        all_data.extend(page_data)
+    # hard wait to allow React to paint content
+    time.sleep(2)
 
-        try:
-            # Check for the "Next" button link
-            next_parent = driver.find_element(By.XPATH, "//li[contains(@class,'pagination__next')]")
-            
-            # If the parent <li> has 'is-disabled', we are on the last page
-            if "is-disabled" in next_parent.get_attribute("class"):
-                print("🏁 Reached last page.")
-                break
+    rows = driver.find_elements(
+        By.XPATH, "//tbody/tr[contains(@class,'table__row')]"
+    )
 
-            next_link = next_parent.find_element(By.TAG_NAME, "a")
-            driver.execute_script("arguments[0].click();", next_link)
-            
-            # Short wait for the table to update
-            time.sleep(2)
-            page_number += 1
-            
-        except Exception as e:
-            print(f"ℹ️ Pagination ended or failed: {e}")
-            break
-
-    print(f"✅ Total Extracted: {len(all_data)} events")
-
-    if not all_data:
-        print("⚠️ No custom events found — inserting NO_DATA row")
+    if not rows:
         return [[
             license_code,
             "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA"
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
         ]]
 
-    return all_data
+    rows_data = []
 
+    for row in rows:
+        try:
+            cells = row.find_elements(By.XPATH, "./td")
+            if len(cells) < 6:
+                continue
+
+            # 1️⃣ Alert Name (use title – most stable)
+            name_container = cells[0].find_element(
+                By.XPATH, ".//div[@title]"
+            )
+            alert_name = name_container.get_attribute("title").strip()
+
+            # Template flag
+            template = "Template" if name_container.find_elements(
+                By.XPATH, ".//span[contains(@class,'template-banner')]"
+            ) else ""
+
+            # 2️⃣ Frequency
+            frequency = cells[1].text.strip() or "-"
+
+            # 3️⃣ Status
+            status = cells[2].text.strip() or "-"
+
+            # 4️⃣ Subscribers (handles '-', emails, +N)
+            subscribers = cells[3].text.strip() or "-"
+
+            # 5️⃣ Last Check
+            last_check = cells[4].text.strip() or "-"
+
+            # 6️⃣ Created On
+            created_on = cells[5].text.strip() or "-"
+
+            rows_data.append([
+                license_code,
+                alert_name,
+                template,
+                frequency,
+                status,
+                subscribers,
+                last_check,
+                created_on
+            ])
+
+        except Exception as e:
+            print(f"⚠️ Skipping alert row due to parse error: {e}")
+            continue
+
+    return rows_data
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -555,29 +599,32 @@ for code in LICENSE_CODES:
                 break
         print(f"↔️ Switched to Edit tab for {code}")
 
-        # Step D: Extract Data
+        # Step D: Extract Alerts
         try:
-            # open_data_platform(driver, wait)
-            # click_data_management(wait)
-            # click_custom_events(wait)
+            account_id = code
             
-            # We are not using above three as im unable to open sidebar so we will directly use the url 
-            account_id = code 
+            go_to_alerts(driver, wait, account_id)
+            # wait for either alerts OR locked modal
+            wait_for_alerts_ready(driver)
 
-            go_to_custom_events(driver, wait, account_id)
+            if is_alerts_locked(driver):
+                log_error_to_sheet(
+                    sheet,
+                    code,
+                    stage="ALERTS_LOCKED",
+                    error_reason="Alerts feature not enabled for this account"
+                )
+                continue
 
-            custom_event_rows = extract_all_custom_events(driver, code)
-            append_to_sheet(sheet, custom_event_rows)
+            alerts_rows = extract_alerts(driver, code)
+            append_to_sheet(sheet, alerts_rows)
 
         except Exception as e:
-            error_msg = str(e)
-            print(f"❌ Failed to process {code}. Error: {error_msg}")
-
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="CUSTOM_EVENTS",
-                error_reason=error_msg
+                stage="ALERTS",
+                error_reason=str(e)
             )
     
     finally:

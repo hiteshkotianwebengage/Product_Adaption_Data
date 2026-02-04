@@ -31,28 +31,28 @@ from selenium.webdriver.common.action_chains import ActionChains
 # =======================
 # REGION CONFIG
 # =======================
-REGION = "INDIA"   # options: "INDIA", "GLOBAL", "KSA"
+REGION = "GLOBAL"   # options: "INDIA", "GLOBAL", "KSA"
 
 REGION_CONFIG = {
     "INDIA": {
         "base_url": "https://dashboard.in.webengage.com",
-        "sheet_name": "Dashboard India",
+        "sheet_name": "Overview India",
         "publisher_url": "https://dashboard.in.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "in~~2024c246","in~11b564276","in~~134106213","in~~15ba206a8","in~~10a5cbb61","in~11b564256"
+            "in~~13410618d","in~~15ba205db","in~aa131896","in~58adcd07","in~11b564357","in~~10a5cba77","in~14507c76b","in~58adcc11","in~~10a5cbac3","in~~134106208","in~~2024c233","in~~2024c207","in~~47b66709","in~82617226","in~14507c71d","in~~991991d0","in~~10a5cbb34","in~76aa298","in~311c46c9","in~~2024c2aa","in~~71680b3c","in~76aa1d7","in~~134106266","in~~15ba20741","in~aa131676","in~aa131652","in~~991992c7","in~~c2ab3781","in~~1341062c1","in~~71680c30","in~~47b6677d","in~11b56417b","in~~71680b90"
         ]
     },
     "GLOBAL": {
         "base_url": "https://dashboard.webengage.com",
-        "sheet_name": "Dashboard Global",
+        "sheet_name": "Overview Global",
         "publisher_url": "https://dashboard.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "~134104929","~GreenlifeEwaste","311c5018","~15ba1cd29","76ab953","~7167d478","11b565ab8","d3a4b501","311c6036","aa133008","~2024a928","76ab919","~15ba1cdc7","311c6106","~2024a8d9","~7167d459","~47b64dcd","76ab94b","~10a5ca413","~c2ab1d61","~47b64d69","11b565933","aa13306d","14507ddc0","76ab948","~99197942","311c601a","311c5ddd","~15ba1cd71","11b56593a","14507ddd3","58add3d1","~c2ab3a30","58b00572","d3a4b47a","58b00482","~10a5ca49a","58b0047d","aa131b8b","~134104910","~10a5cb607","~7167d4a7","311c50c2","76ab96b","~13410487b","311c50ac","~99198826","76aab90","311c4c52","~71680307","~15ba1dcd4","~47b64d09","~99198b33","~c2ab1d11","d3a4a33c","~c2ab1dda","aa132dcb","76ab943","58b00487","11b565931","~134104942","aa132dc1","~15ba1d007","~134104952","76ab929","~1341053c6","d3a4b479","aa132dac","~c2ab1dc3","11b565915","76ab940","58add629","~47b64c57","~2024a96d","~7167d309","311c6107","~c2ab2d96","aa131c6a","~7167d4b3","~7168061a","76ab912","~2024a973","311c5dac","~134104968","~2024a7c4","58b00457","76ab922","~7167d4b4","~10a5ca4a2"
+            "~134105a52","~716800b0","~15ba2020b","~15ba20105","~2024bb2d","~134105a04","76aa78b","~1341056a0","~71680655","~134105965","~9919868d","~99198a29","58add69d","14507cc74","aa132225","311c4c14","311c4c11","76aa762","11b564830","76aab88","~71680627","11b5646ca","~c2ab3083","~15ba2019a","~99198226","82617775","~c2ab3042","311c4bc4","~10a5cb20c","14507cc0a","~15ba1db98","~47b661c8","~2024bb90","82617779","~47b660d4","~134105353","~47b66257","~15ba20080","58add667","~1341056c2","14507d197","~10a5cb283","~15ba1dd60","~9919879c","d3a4b631","~c2ab2d61","~47b65736","~2024b742","14507d028","d3a4a4aa","76abad2","~134104786","76aba82","~15ba1dd60","76ab97b","145080010","d3a4b4a3","~2024a938","82618947.0","~15ba1cdc0","76ab953","~7167d478","~13410487b","76ab940"
         ]
     },
     "KSA": {
         "base_url": "https://dashboard.ksa.webengage.com",
-        "sheet_name": "Dashboard KSA",
+        "sheet_name": "Overview KSA",
         "publisher_url": "https://dashboard.ksa.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
             "ksa~~15ba20526","ksa~82617412","ksa~~716809b4","ksa~14507c890","ksa~~2024c070","ksa~76aa41c","ksa~~716809bd","ksa~11b564409","ksa~~47b6652a","ksa~aa1318a1","ksa~~47b6652c","ksa~58adcd4c","ksa~11b564406","ksa~~15ba2051c","ksa~aa131897","ksa~~134106071","ksa~82617408","ksa~58adcd55","ksa~~15ba20523","ksa~~10a5cb9bd","ksa~d3a49d49","ksa~11b5643db","ksa~d3a49d4a","ksa~d3a49d44","ksa~58adcd54","ksa~aa13189b","ksa~311c489a","ksa~82617404","ksa~~2024c08a","ksa~~134106076","ksa~14507c891","ksa~~716809c9","ksa~d3a49d46","ksa~~47b66537","ksa~~134106074","ksa~~2024c07d","ksa~~2024c085","ksa~82617402","ksa~~13410607a","ksa~11b564403","ksa~~716809ba","ksa~~10a5cb9c4","ksa~~99199078","ksa~~15ba20518","ksa~~134106069","ksa~311c4892","ksa~~99199083","ksa~aa1318a0","ksa~~13410606b","ksa~11b5643d5","ksa~~134106080","ksa~58adcd47","ksa~58adcd44","ksa~11b5643d3","ksa~826173db","ksa~d3a49d41","ksa~~134106084","ksa~~99199073","ksa~~99199087","ksa~aa131893","ksa~~15ba20531","ksa~76aa3da","ksa~~2024c091","ksa~826173dc","ksa~82617401","ksa~aa131890","ksa~14507c89c","ksa~~10a5cb9d1","ksa~~2024c08d","ksa~~47b66522"
@@ -82,6 +82,7 @@ except Exception as e:
     print(f"❌ Failed to connect to Google Sheets: {e}")
     exit()
 
+# ========== We need no change from here till the edit button clicked ========== #
 
 # ---------- STEP 0: SETUP PERSISTENT PROFILE ----------
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -170,11 +171,10 @@ def search_by_license(driver, wait, license_code):
     )
     search_btn.click()
     print("✅ Succesfully entered the LC and clicked search button")
-
+    
 def check_if_result_exists(driver, license_code, timeout=5):
     """
-    Returns False if LC does not appear in publisher table
-    (wrong region / invalid LC)
+    Returns False if LC does not appear in publisher table (wrong region / invalid)
     """
     try:
         WebDriverWait(driver, timeout).until(
@@ -188,7 +188,6 @@ def check_if_result_exists(driver, license_code, timeout=5):
 
     rows = driver.find_elements(By.XPATH, f"//tr[contains(., '{license_code}')]")
     return len(rows) > 0
-
 
 def open_actions_dropdown(driver, wait, license_code):
     print(f"⏳ Opening Actions dropdown for {license_code}...")
@@ -293,146 +292,75 @@ def click_edit(driver, wait, license_code):
     edit_btn.click()
     print("✅ Clicked the specific edit button")
 
+# ========== Till here no change things will be same ========== #
 
-def click_dashboards(wait):
-    print("⏳ Clicking Dashboards...")
+def go_to_overview(driver, wait, account_id):
+    base_url = REGION_CONFIG[REGION]["base_url"]
+    url = f"{base_url}/accounts/{account_id}/engagement/overview/all"
 
-    dashboard_xpath = (
-        "//a[contains(@href,'/custom-dashboard/list') and .//span[text()='Dashboards']]"
-    )
+    driver.get(url)
 
-    wait.until(
-        EC.element_to_be_clickable((By.XPATH, dashboard_xpath))
-    ).click()
+# If no Data available -> check
+def is_overview_no_data(driver):
+    return "Channel statistics not available" in driver.page_source
 
-    print("✅ Dashboards opened")
+def extract_overview_table(driver, license_code):
+    print("📥 Extracting Overview table...")
 
-def wait_for_dashboard_table_or_empty(driver, timeout=8):
-    """
-    Waits for either:
-    - dashboard rows
-    - empty dashboard state
-    - pagination (even if empty)
-    Returns True if rows exist, False if NO_DATA
-    """
-    try:
-        WebDriverWait(driver, timeout).until(
-            lambda d: (
-                d.find_elements(By.CLASS_NAME, "table__row")
-                or d.find_elements(By.CLASS_NAME, "pagination")
-                or "No dashboards" in d.page_source
-            )
-        )
-    except:
-        return False
-
-    rows = driver.find_elements(By.CLASS_NAME, "table__row")
-    return len(rows) > 0
-
-def extract_dashboard_page(driver, license_code):
-    rows_data = []
+    # ✅ ONLY true no-data case
+    if "Channel statistics not available" in driver.page_source:
+        print("ℹ️ Channel statistics not available → NO_DATA")
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA"
+        ]]
 
     rows = driver.find_elements(
         By.XPATH,
         "//tbody/tr[contains(@class,'table__row')]"
     )
 
+    # 🚨 SAFETY: page loaded but table missing (rare)
+    if not rows:
+        print("⚠️ No rows found, treating as NO_DATA")
+        return [[
+            license_code,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA"
+        ]]
+
+    rows_data = []
+
     for row in rows:
-        try:
-            cells = row.find_elements(By.XPATH, "./td")
-            if len(cells) < 5:
-                continue
+        cells = row.find_elements(By.XPATH, "./td")
 
-            # 1️⃣ Dashboard Name
-            dashboard_name = cells[0].find_element(
-                By.XPATH, ".//a"
-            ).get_attribute("title").strip()
-
-            # 2️⃣ Cards Count
-            cards = cells[1].text.strip()
-
-            # 3️⃣ Last Updated
-            last_updated = cells[2].find_element(
-                By.XPATH, ".//span"
-            ).get_attribute("title").strip()
-
-            # 4️⃣ Tags
-            try:
-                tags = ",".join([
-                    t.text.strip()
-                    for t in cells[3].find_elements(By.CLASS_NAME, "pill-text")
-                ])
-            except:
-                tags = ""
-
-            rows_data.append([
-                license_code,
-                dashboard_name,
-                cards,
-                last_updated,
-                tags
-            ])
-
-        except Exception as e:
-            print(f"⚠️ Skipping dashboard row: {e}")
+        # Overview table has 6 metrics + channel
+        if len(cells) < 6:
             continue
 
+        rows_data.append([
+            license_code,
+            cells[0].text.strip() or "-",  # Channel
+            cells[1].text.strip() or "-",
+            cells[2].text.strip() or "-",
+            cells[3].text.strip() or "-",
+            cells[4].text.strip() or "-",
+            cells[5].text.strip() or "-"
+        ])
+
+    print(f"✅ Extracted {len(rows_data)} rows")
     return rows_data
-
-
-def extract_all_dashboards(driver, license_code):
-    print("📥 Extracting Dashboards (all pages)...")
-
-    has_data = wait_for_dashboard_table_or_empty(driver)
-
-    # 🔹 NO DATA FAST EXIT
-    if not has_data:
-        print("⚠️ No dashboards found — fast skipping")
-        return [[
-            license_code,
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA"
-        ]]
-
-    all_data = []
-    page_number = 1
-
-    while True:
-        print(f"📄 Scraping Dashboard Page {page_number}...")
-        page_data = extract_dashboard_page(driver, license_code)
-        all_data.extend(page_data)
-
-        try:
-            next_li = driver.find_element(
-                By.XPATH,
-                "//li[contains(@class,'pagination__next')]"
-            )
-
-            if "is-disabled" in next_li.get_attribute("class"):
-                break
-
-            next_link = next_li.find_element(By.TAG_NAME, "a")
-            driver.execute_script("arguments[0].click();", next_link)
-            time.sleep(1.5)
-            page_number += 1
-
-        except:
-            break
-
-    if not all_data:
-        return [[
-            license_code,
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA"
-        ]]
-
-    print(f"✅ Total Dashboards Extracted: {len(all_data)}")
-    return all_data
-
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -462,7 +390,7 @@ for code in LICENSE_CODES:
         # Step A: Search and land on result
         search_by_license(driver, wait, code)
 
-        # 🔥 DASHBOARD ERROR GUARD: LC belongs to another region
+        # 🔥 ERROR HANDLING: LC belongs to another region
         if not check_if_result_exists(driver, code):
             log_error_to_sheet(
                 sheet,
@@ -502,28 +430,21 @@ for code in LICENSE_CODES:
 
         # Step D: Extract Data
         try:
-            click_dashboards(wait)
+            account_id = code
 
-            # Wait for dashboard table to load
-            dashboard_rows = extract_all_dashboards(driver, code)
-            append_to_sheet(sheet, dashboard_rows)
+            go_to_overview(driver, wait, account_id)
 
-            time.sleep(1)
-
-            dashboard_rows = extract_all_dashboards(driver, code)
-
-            append_to_sheet(sheet, dashboard_rows)
+            overview_rows = extract_overview_table(driver, code)
+            append_to_sheet(sheet, overview_rows)
 
         except Exception as e:
-            error_msg = str(e)
-            print(f"❌ Dashboard extraction failed for {code}: {error_msg}")
-
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="DASHBOARD_EXTRACTION",
-                error_reason=error_msg
+                stage="OVERVIEW",
+                error_reason=str(e)
             )
+
     
     finally:
         # Step E: Cleanup for next iteration
