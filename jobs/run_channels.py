@@ -71,6 +71,41 @@ def run_scrapper(region):
 
     cookies = get_session_cookies(driver)
 
+    # IF session expires 
+    def refresh_session(driver, region):
+
+        logger.info("🔄 Attempting silent session refresh...")
+
+        driver.get(f"{PRE_BASE_URLS[region]}/admin")
+        time.sleep(5)
+
+        cookies = get_session_cookies(driver)
+
+        # 🔍 Validate session by checking a quick API call
+        test_url = f"{BASE_URLS[region]}/api/v1/accounts"
+
+        try:
+            import requests
+            res = requests.get(test_url, cookies=cookies)
+
+            if res.status_code == 200:
+                logger.info("✅ Session restored silently")
+                return cookies
+
+        except:
+            pass
+
+        # ❗ FALLBACK → manual login
+        logger.warning("⚠️ Silent refresh failed → manual login needed")
+        input("👉 Please login manually and press ENTER...")
+
+        driver.get(f"{PRE_BASE_URLS[region]}/admin")
+        time.sleep(5)
+
+        cookies = get_session_cookies(driver)
+
+        return cookies
+
     # Google Sheets
     client = get_gsheet_client()
     SPREADSHEET_ID = "16OVEV-QXpPNKTlTMvnxcIy52ULE9ILUNL14ox_VNOhI"
@@ -118,31 +153,39 @@ def run_scrapper(region):
 
                 # -------- ACCESS HANDLING --------
                 if res.status_code == 403:
+
                     logger.info(f"🔒 Requesting access → {lc}")
 
                     status = request_access(lc, region, cookies, BASE_URLS, ROLE_IDS)
 
-                    if status != 200:
+                    # ✅ Case 1: Access granted
+                    if status == 200:
+                        logger.info(f"✅ Access granted → retrying {lc}")
+                        time.sleep(random.uniform(3, 6))
+                        continue   # retry API
 
-                        logger.warning("⚠️ Session might be expired")
+                    # ❌ Case 2: Access failed → maybe session expired
+                    logger.warning("⚠️ Session might be expired")
 
-                        if not session_refreshed:
-                            driver.get(f"{PRE_BASE_URLS[region]}/admin")
-                            input("👉 Session expired. Login again and press ENTER...")
+                    if not session_refreshed:
+                        logger.info("🔄 Refreshing session...")
 
-                            cookies = get_session_cookies(driver)
-                            session_refreshed = True
+                        cookies = refresh_session(driver, region)
+                        session_refreshed = True
 
-                            status = request_access(lc, region, cookies, BASE_URLS, ROLE_IDS)
+                        logger.info("✅ Session refreshed")
 
-                            if status == 200:
-                                continue
+                        # 🔁 Retry access AFTER refresh
+                        status = request_access(lc, region, cookies, BASE_URLS, ROLE_IDS)
 
-                        logger.error(f"❌ Access failed → {lc}")
-                        break
+                        if status == 200:
+                            logger.info(f"✅ Access granted after refresh → retrying {lc}")
+                            time.sleep(random.uniform(3, 6))
+                            continue   # retry API
 
-                    time.sleep(random.uniform(4, 7))
-                    continue
+                    # ❌ Still failed
+                    logger.error(f"❌ Access failed permanently → {lc}")
+                    break
 
                 if res.status_code != 200:
                     logger.error(f"❌ API Failed {lc} ({res.status_code})")
