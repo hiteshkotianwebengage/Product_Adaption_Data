@@ -3,8 +3,9 @@
     1) Below Client inside init_google_sheet function change the sheet name
     2) In the step 0 below the Driver varibale change between driver.get 
     3) In the step 2 while direct url for publisher change between driver.get
-    4) In the step E we have urls to directly go to publisher after data is fetching
-    5) This is pretty main we have to change the LC based on the global, india, ksa
+    4) Inside the go_to_revenue_mapping function we switch between the url
+    5) In the step 5 we have urls to directly go to publisher after data is fetching
+    6) This is pretty main we have to change the LC based on the global, india, ksa
 '''
 
 '''
@@ -31,31 +32,31 @@ from selenium.webdriver.common.action_chains import ActionChains
 # =======================
 # REGION CONFIG
 # =======================
-REGION = "GLOBAL"   # options: "INDIA", "GLOBAL", "KSA"
+REGION = "KSA"   # options: "INDIA", "GLOBAL", "KSA"
 
 REGION_CONFIG = {
     "INDIA": {
-        "base_url": "https://dashboard.in.webengage.com",
-        "sheet_name": "Overview India",
-        "publisher_url": "https://dashboard.in.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com",
+        "sheet_name": "Revenue Mapping India",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "in~~13410618d","in~~15ba205db","in~aa131896","in~58adcd07","in~11b564357","in~~10a5cba77","in~14507c76b","in~58adcc11","in~~10a5cbac3","in~~134106208","in~~2024c233","in~~2024c207","in~~47b66709","in~82617226","in~14507c71d","in~~991991d0","in~~10a5cbb34","in~76aa298","in~311c46c9","in~~2024c2aa","in~~71680b3c","in~76aa1d7","in~~134106266","in~~15ba20741","in~aa131676","in~aa131652","in~~991992c7","in~~c2ab3781","in~~1341062c1","in~~71680c30","in~~47b6677d","in~11b56417b","in~~71680b90"
+            "in~~10a5cbc14","in~aa131655","in~~47b66750","in~76aa241","in~~2024c2a0","in~14507c681","in~aa131667","in~~134106266","in~11b5641a0","in~~15ba20741","in~~2024c2c1","in~~71680b61","in~76aa206","in~~10a5cbc2c","in~aa131676","in~~71680bb9","in~~c2ab3735","in~aa131652","in~14507c67b","in~aa131675","in~14507c65b","in~11b5641a9","in~~2024c27c","in~11b5641aa","in~d3a49b10","in~~15ba20753","in~d3a49b0b","in~~991992c6","in~~15ba2076c","in~~71680c2b","in~82617199","in~58adcb50","in~76aa201","in~~47b66733","in~~10a5cbc25","in~aa131650","in~aa13163a","in~11b56418d","in~11b564191","in~~2024c2b8","in~311c4663","in~76aa1a2","in~~15ba2074d","in~~c2ab3781","in~~1341062bb","in~~991992c4","in~~10a5cbc2d","in~~1341062c1","in~~991992cc","in~311c4664","in~14507c641","in~~71680c30","in~aa13164b","in~~991992a4","in~~15ba20759","in~~15ba205c0","in~~2024c231","in~76aa1ac","in~11b5641b1","in~~47b6677d","in~58adcb36","in~aa13166b","in~~991992d1","in~~1341062c2","in~~99199081","in~14507c63b","in~~99199278","in~14507c666","in~aa131632","in~76aa20d","in~311c464b","in~311c4766","in~11b564177","in~11b564172","in~d3a49ad8","in~~47b66782","in~11b564181","in~~c2ab3789","in~311c4646","in~~c2ab36a7","in~~47b6665b","in~~99199306","in~~c2ab3794","in~~991992cd","in~~2024c262","in~aa13162a","in~~47b66752","in~82617256","in~14507c69a","in~~99199213","in~~71680b7d","in~58adcb46","in~~10a5cbbb6","in~~9919926b","old-in~~99199240","in~aa13168a","in~311c4685","in~58adcb73","in~14507c6ad","in~~134106261","in~~134106255","in~~71680bb8","in~~c2ab36cb","in~aa131694","old-in~~99199240"
         ]
     },
     "GLOBAL": {
-        "base_url": "https://dashboard.webengage.com",
-        "sheet_name": "Overview Global",
-        "publisher_url": "https://dashboard.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com",
+        "sheet_name": "Revenue Mapping Global",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "~134105a52","~716800b0","~15ba2020b","~15ba20105","~2024bb2d","~134105a04","76aa78b","~1341056a0","~71680655","~134105965","~9919868d","~99198a29","58add69d","14507cc74","aa132225","311c4c14","311c4c11","76aa762","11b564830","76aab88","~71680627","11b5646ca","~c2ab3083","~15ba2019a","~99198226","82617775","~c2ab3042","311c4bc4","~10a5cb20c","14507cc0a","~15ba1db98","~47b661c8","~2024bb90","82617779","~47b660d4","~134105353","~47b66257","~15ba20080","58add667","~1341056c2","14507d197","~10a5cb283","~15ba1dd60","~9919879c","d3a4b631","~c2ab2d61","~47b65736","~2024b742","14507d028","d3a4a4aa","76abad2","~134104786","76aba82","~15ba1dd60","76ab97b","145080010","d3a4b4a3","~2024a938","82618947.0","~15ba1cdc0","76ab953","~7167d478","~13410487b","76ab940"
+            "~d3a4a667","~11b56421","~11b565abc","~c2ab1c88","~d3a4b624","~old~11b564403","~bit24newtempold","82617855","~2024c07c","~991978c7","~311c60ad","~82618978","~oldin~~c2ab3761","~145080023","~11b565971","~11b565961","~134104919","~old~76ab96b","~2024a939","~82618947","~7167d4a4"
         ]
     },
     "KSA": {
-        "base_url": "https://dashboard.ksa.webengage.com",
-        "sheet_name": "Overview KSA",
-        "publisher_url": "https://dashboard.ksa.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com",
+        "sheet_name": "Revenue Mapping KSA",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "ksa~~15ba20526","ksa~82617412","ksa~~716809b4","ksa~14507c890","ksa~~2024c070","ksa~76aa41c","ksa~~716809bd","ksa~11b564409","ksa~~47b6652a","ksa~aa1318a1","ksa~~47b6652c","ksa~58adcd4c","ksa~11b564406","ksa~~15ba2051c","ksa~aa131897","ksa~~134106071","ksa~82617408","ksa~58adcd55","ksa~~15ba20523","ksa~~10a5cb9bd","ksa~d3a49d49","ksa~11b5643db","ksa~d3a49d4a","ksa~d3a49d44","ksa~58adcd54","ksa~aa13189b","ksa~311c489a","ksa~82617404","ksa~~2024c08a","ksa~~134106076","ksa~14507c891","ksa~~716809c9","ksa~d3a49d46","ksa~~47b66537","ksa~~134106074","ksa~~2024c07d","ksa~~2024c085","ksa~82617402","ksa~~13410607a","ksa~11b564403","ksa~~716809ba","ksa~~10a5cb9c4","ksa~~99199078","ksa~~15ba20518","ksa~~134106069","ksa~311c4892","ksa~~99199083","ksa~aa1318a0","ksa~~13410606b","ksa~11b5643d5","ksa~~134106080","ksa~58adcd47","ksa~58adcd44","ksa~11b5643d3","ksa~826173db","ksa~d3a49d41","ksa~~134106084","ksa~~99199073","ksa~~99199087","ksa~aa131893","ksa~~15ba20531","ksa~76aa3da","ksa~~2024c091","ksa~826173dc","ksa~82617401","ksa~aa131890","ksa~14507c89c","ksa~~10a5cb9d1","ksa~~2024c08d","ksa~~47b66522"
+            "ksa~~2024c070","ksa~~47b6652a","ksa~58adcd4c","ksa~11b564406","ksa~82617404","ksa~d3a49d46","ksa~~2024c07d","ksa~~99199078","ksa~~99199083","ksa~~13410606b","ksa~11b5643d5","ksa~~134106080","ksa~58adcd44","ksa~~134106084","ksa~~99199087","ksa~aa131893","ksa~14507c89c","ksa~~47b66522","ksa~~c2ab3537","ksa~~99199088","ksa~~2024c083","ksa~~2024c084"
         ]
     }
 }
@@ -63,14 +64,14 @@ REGION_CONFIG = {
 def init_google_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Python Script/agreement_file_pasting/mycred-googlesheet.json",
+        "/Users/admin/Desktop/Code Directory/Product_Adaption_Data/Credential File/mycred-googlesheet.json",
         scopes=scopes
     )
     client = gspread.authorize(creds)
 
     sheet_name = REGION_CONFIG[REGION]["sheet_name"]
     sheet = client.open_by_key(
-        "1sathL7caATX3PnV2urKhp8UpCLOcwdTIxzkJkA4Kar4"
+        "1D0-O3OX3TOmZRMRZmyYoubRxBtekAB05b50lcaIOweM"
     ).worksheet(sheet_name)
 
     return sheet
@@ -154,7 +155,6 @@ else:
             PUBLISHER_URL = REGION_CONFIG[REGION]["publisher_url"]
             driver.get(PUBLISHER_URL)
 
-
 print("🎯 SUCCESS: You are now on the Publishers page.")
 
 def search_by_license(driver, wait, license_code):
@@ -171,23 +171,23 @@ def search_by_license(driver, wait, license_code):
     )
     search_btn.click()
     print("✅ Succesfully entered the LC and clicked search button")
-    
-def check_if_result_exists(driver, license_code, timeout=5):
-    """
-    Returns False if LC does not appear in publisher table (wrong region / invalid)
-    """
-    try:
-        WebDriverWait(driver, timeout).until(
-            lambda d: (
-                d.find_elements(By.XPATH, f"//tr[contains(., '{license_code}')]")
-                or "No data" in d.page_source
-            )
-        )
-    except:
-        return False
 
-    rows = driver.find_elements(By.XPATH, f"//tr[contains(., '{license_code}')]")
-    return len(rows) > 0
+def should_skip_account(driver):
+
+    # ❌ Case 1: Oops page
+    if driver.find_elements(By.XPATH, "//h2[contains(text(),'Oops')]"):
+        print("⛔ Oops page → Skipping")
+        return True, "Region mismatch"
+
+    # ❌ Case 2: Request Demo (ROBUST FIX)
+    if (
+        driver.find_elements(By.XPATH, "//*[contains(normalize-space(.), 'Request a Demo')]")
+        or "Request a Demo" in driver.page_source
+    ):
+        print("⛔ Request Demo → Skipping")
+        return True, "Service stopped"
+
+    return False, None
 
 def open_actions_dropdown(driver, wait, license_code):
     print(f"⏳ Opening Actions dropdown for {license_code}...")
@@ -224,7 +224,6 @@ def handle_request_modal(wait, driver):
     time.sleep(2)
 
     # 1. SMART IFRAME DETECTION
-    # We only switch if an iframe actually exists AND is visible
     iframes = driver.find_elements(By.TAG_NAME, "iframe")
     switched = False
     for frame in iframes:
@@ -243,8 +242,7 @@ def handle_request_modal(wait, driver):
         )
         
         # 3. FORCE SELECTION VIA JAVASCRIPT
-        # This is the most reliable way to select 'Viewer' regardless of UI quirks
-        print("🚀 # React-safe role selection (required only during first-time access request)")
+        print("🚀 Forcing selection via JavaScript...")
         Select(role_dropdown).select_by_visible_text("Viewer")
         
         # 4. FILL COMMENT
@@ -292,75 +290,134 @@ def click_edit(driver, wait, license_code):
     edit_btn.click()
     print("✅ Clicked the specific edit button")
 
-# ========== Till here no change things will be same ========== #
 
-def go_to_overview(driver, wait, account_id):
+def open_data_platform(driver, wait):
+    print("⏳ Ensuring Data Platform menu is open...")
+
+    data_platform_li = wait.until(
+        EC.presence_of_element_located((By.ID, "nav-data-platform"))
+    )
+
+    class_attr = data_platform_li.get_attribute("class")
+
+    if "menu__group--is-active" not in class_attr:
+        print("🔓 Opening Data Platform sidebar via JS")
+        driver.execute_script(
+            "arguments[0].classList.add('menu__group--is-active');",
+            data_platform_li
+        )
+        time.sleep(0.5)
+    else:
+        print("✅ Data Platform already open")
+
+def go_to_revenue_mapping(driver, wait, account_id):
     base_url = REGION_CONFIG[REGION]["base_url"]
-    url = f"{base_url}/accounts/{account_id}/engagement/overview/all"
+    url = f"{base_url}/accounts/{account_id}/data-management/events/revenue"
 
     driver.get(url)
 
-# If no Data available -> check
-def is_overview_no_data(driver):
-    return "Channel statistics not available" in driver.page_source
+    # wait for rows OR empty state
+    wait_for_revenue_or_empty(driver)
+    print("✅ Landed on Revenue Mapping (via URL)")
 
-def extract_overview_table(driver, license_code):
-    print("📥 Extracting Overview table...")
 
-    # ✅ ONLY true no-data case
-    if "Channel statistics not available" in driver.page_source:
-        print("ℹ️ Channel statistics not available → NO_DATA")
+def click_data_management(wait):
+    print("⏳ Clicking Data Management...")
+
+    data_management_xpath = (
+        "//a[contains(@href,'/data-management/system/attributes') and .//span[text()='Data Management']]"
+    )
+
+    wait.until(
+        EC.element_to_be_clickable((By.XPATH, data_management_xpath))
+    ).click()
+
+    print("✅ Clicked Data Management")
+
+def click_revenue_mapping(wait):
+    print("⏳ Waiting for Revenue Mapping tab...")
+
+    revenue_tab_xpath = (
+        "//a[contains(@href,'/data-management/events/revenue') and normalize-space()='Revenue Mapping']"
+    )
+
+    wait.until(
+        EC.element_to_be_clickable((By.XPATH, revenue_tab_xpath))
+    ).click()
+
+    print("✅ Revenue Mapping opened")
+
+def extract_revenue_mapping_data(driver, wait, license_code):
+    print("📥 Extracting Revenue Mapping data...")
+    data_rows = []
+
+    account_name = wait.until(
+        EC.presence_of_element_located((By.ID, "we-account-name"))
+    ).text.strip()
+
+    try:
+        currency = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((
+                By.XPATH,
+                "//div[@aria-label='Select a currency']//span[contains(@class,'handle-text-overflow')]"
+            ))
+        ).text.strip()
+    except:
+        currency = "NULL"
+
+    # ⏳ Wait briefly for rows OR empty state
+    has_data = wait_for_revenue_or_empty(driver)
+
+    if not has_data:
+        print("⚠️ No Revenue Mapping found — inserting NO_DATA row")
         return [[
             license_code,
+            account_name,
+            currency,
             "NO_DATA",
             "NO_DATA",
             "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA"
+            ""
         ]]
 
     rows = driver.find_elements(
         By.XPATH,
-        "//tbody/tr[contains(@class,'table__row')]"
+        "//div[contains(@class,'row') and .//i[contains(@class,'fl-delete')]]"
     )
 
-    # 🚨 SAFETY: page loaded but table missing (rare)
-    if not rows:
-        print("⚠️ No rows found, treating as NO_DATA")
-        return [[
-            license_code,
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA"
-        ]]
-
-    rows_data = []
-
     for row in rows:
-        cells = row.find_elements(By.XPATH, "./td")
+        try:
+            dropdowns = row.find_elements(By.XPATH, ".//div[contains(@class,'r-ss-trigger')]")
+            if len(dropdowns) >= 2:
+                event_name = dropdowns[0].text.strip()
+                attribute_name = dropdowns[1].text.strip()
 
-        # Overview table has 6 metrics + channel
-        if len(cells) < 6:
+                data_rows.append([
+                    license_code,
+                    account_name,
+                    currency,
+                    event_name,
+                    attribute_name,
+                    "SUCCESS",
+                    ""
+                ])
+        except:
             continue
 
-        rows_data.append([
+    if not data_rows:
+        return [[
             license_code,
-            cells[0].text.strip() or "-",  # Channel
-            cells[1].text.strip() or "-",
-            cells[2].text.strip() or "-",
-            cells[3].text.strip() or "-",
-            cells[4].text.strip() or "-",
-            cells[5].text.strip() or "-"
-        ])
+            account_name,
+            currency,
+            "NO_DATA",
+            "NO_DATA",
+            "NO_DATA",
+            ""
+        ]]
 
-    print(f"✅ Extracted {len(rows_data)} rows")
-    return rows_data
+    print(f"✅ Extracted {len(data_rows)} revenue mappings")
+    return data_rows
+
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -369,91 +426,111 @@ def append_to_sheet(sheet, rows):
     else:
         print("⚠️ No data to push")
 
-def log_error_to_sheet(sheet, license_code, stage, error_reason):
-    print(f"📝 Logging error for {license_code} at stage: {stage}")
+def log_error_to_sheet(sheet, license_code, error_reason):
+    print(f"📝 Logging error for {license_code}")
 
     row = [
         license_code,
+        "NULL",
+        "NULL",
+        "NULL",
+        "NULL",
         "ERROR",
-        stage,
-        error_reason[:300],  # keep it readable
-        time.strftime("%Y-%m-%d %H:%M:%S")
+        error_reason[:300]  # prevent huge stack traces
     ]
 
     sheet.append_row(row, value_input_option="USER_ENTERED")
+
+def wait_for_revenue_or_empty(driver, timeout=6):
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//i[contains(@class,'fl-delete')]")
+                or "No data" in d.page_source
+            )
+        )
+    except:
+        return False
+
+    rows = driver.find_elements(By.XPATH, "//i[contains(@class,'fl-delete')]")
+    return len(rows) > 0
+
+# Here we start to loop in the LC in the site 
 
 LICENSE_CODES = REGION_CONFIG[REGION]["license_codes"]
 
 for code in LICENSE_CODES:
     print(f"\n▶ Processing {code}")
+
     try:
-        # Step A: Search and land on result
+        # Step A: Search
         search_by_license(driver, wait, code)
 
-        # 🔥 ERROR HANDLING: LC belongs to another region
-        if not check_if_result_exists(driver, code):
-            log_error_to_sheet(
-                sheet,
-                code,
-                stage="REGION_MISMATCH",
-                error_reason="License code not found in this region"
-            )
+        # 🔥 Step B: Skip check
+        skip, reason = should_skip_account(driver)
+
+        if skip:
+            print(f"⏭ Skipping {code} → {reason}")
+
+            log_error_to_sheet(sheet, code, reason)
+
+            driver.get(REGION_CONFIG[REGION]["publisher_url"])
+            wait.until(EC.presence_of_element_located((By.NAME, "licenseCode")))
             continue
-        
-        # Step B: Try to get access (only if needed)
+
+        # 🚫 Step C: LC not found
+        if not driver.find_elements(By.XPATH, f"//tr[contains(., '{code}')]"):
+            print("⛔ LC not found in this region")
+
+            log_error_to_sheet(sheet, code, "Region mismatch")
+
+            driver.get(REGION_CONFIG[REGION]["publisher_url"])
+            continue
+
+        # Step D: Access handling
         try:
-            open_actions_dropdown(driver, wait, code) # Added driver and code
-            
+            open_actions_dropdown(driver, wait, code)
+
             request_btn_xpath = f"//tr[contains(., '{code}')]//a[contains(@class,'requestAccess')]"
-            if len(driver.find_elements(By.XPATH, request_btn_xpath)) > 0:
+
+            if driver.find_elements(By.XPATH, request_btn_xpath):
                 click_request_access(wait)
                 handle_request_modal(wait, driver)
                 time.sleep(2)
                 close_modal_if_exists(driver)
             else:
-                print("ℹ️ Access already available. Moving to Edit.")
-                # If dropdown is open but we don't need it, refresh or Esc
-                ActionChains(driver).send_keys(Keys.ESCAPE).perform() 
+                print("ℹ️ Access already available")
+                ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+
         except Exception as e:
             print(f"⚠️ Access step skipped: {e}")
 
-        # --- Updated Step C: Pass 'code' to the edit function ---
+        # Step E: Edit
         main_window = driver.current_window_handle
         click_edit(driver, wait, code)
 
-        # SWITCH TO NEW TAB
         for window_handle in driver.window_handles:
             if window_handle != main_window:
                 driver.switch_to.window(window_handle)
                 break
-        print(f"↔️ Switched to Edit tab for {code}")
 
-        # Step D: Extract Data
-        try:
-            account_id = code
+        # Step F: Revenue
+        go_to_revenue_mapping(driver, wait, code)
 
-            go_to_overview(driver, wait, account_id)
+        rows = extract_revenue_mapping_data(driver, wait, code)
+        append_to_sheet(sheet, rows)
 
-            overview_rows = extract_overview_table(driver, code)
-            append_to_sheet(sheet, overview_rows)
+        print(f"✅ Success for {code}")
 
-        except Exception as e:
-            log_error_to_sheet(
-                sheet,
-                code,
-                stage="OVERVIEW",
-                error_reason=str(e)
-            )
+    except Exception as e:
+        print(f"❌ Failed {code}: {e}")
+        log_error_to_sheet(sheet, code, str(e))
 
-    
     finally:
-        # Step E: Cleanup for next iteration
-        # Close extra tabs and go back to the list
         if len(driver.window_handles) > 1:
-            driver.close() # Closes current (Edit) tab
+            driver.close()
             driver.switch_to.window(main_window)
-        
-        PUBLISHER_URL = REGION_CONFIG[REGION]["publisher_url"]
-        driver.get(PUBLISHER_URL)
 
-        time.sleep(2)
+        driver.get(REGION_CONFIG[REGION]["publisher_url"])
+        wait.until(EC.presence_of_element_located((By.NAME, "licenseCode")))
+        time.sleep(1)

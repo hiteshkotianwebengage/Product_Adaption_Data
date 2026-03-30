@@ -27,6 +27,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import gspread
 from google.oauth2.service_account import Credentials
 from selenium.webdriver.common.action_chains import ActionChains
+from datetime import datetime, timedelta
 
 # =======================
 # REGION CONFIG
@@ -35,27 +36,27 @@ REGION = "GLOBAL"   # options: "INDIA", "GLOBAL", "KSA"
 
 REGION_CONFIG = {
     "INDIA": {
-        "base_url": "https://dashboard.in.webengage.com",
-        "sheet_name": "User India",
-        "publisher_url": "https://dashboard.in.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com",
+        "sheet_name": "Overview India",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "in~~134106216"
+            "in~~9919912c","in~~99199192","in~~134106156","in~~15ba205db","in~58adcd07","in~~47b66667","in~14507c784","in~76aa392","in~~10a5cba77","in~8261729b","in~14507c76b","in~58adcc4a","in~~47b665d8","in~58adcc70","in~58adcc59","in~~c2ab363b","in~~2024c156","in~~c2ab3517","in~76aa2c9","in~~71680ad0","in~~15ba2065c","in~~1341061ac","in~58adcc11","in~76aa35b","in~~134106132","in~~15ba205d1","in~~1341061b6","in~~10a5cbb1d","in~11b5642a5","in~~47b66670","in~~15ba20633","in~311c4742","in~311c4724","in~~134106208","in~14507c728","in~~15ba20670","in~~15ba206a9","in~~2024c233","in~~47b666d5","in~76aa1d8","in~~99199258","in~~71680b65","in~~10a5cbb42","in~aa1318ab","in~~c2ab3714","in~58adcb8b","in~d3a49b94","in~d3a49bac","in~~10a5cbb66","in~~c2ab36d5","in~~c2ab3671","in~~47b66716","in~82617217","in~d3a49ba1","in~14507c71d","in~76aa298","in~~10a5cba3a","in~~10a5cbba6","in~11b5641db","in~~134106263","in~58adcb79","in~~15ba20672","in~58adcb94","in~~134106273","in~11b5641d0","in~d3a49b43","in~76aa1b3","in~826171c3","in~~134106267","in~~99199277","in~~10a5cbb38","in~~71680bd5","in~~2024c1d7","in~~2024c218","in~~47b6668a","in~~134106213","in~~15ba206a8","in~~10a5cbb61","in~11b564256","in~~9919921b","in~~134106216","in~~71680b69","in~311c46d4","in~311c46d3","in~58adcb85","in~~2024c249","in~311c4665","in~~71680c19","in~~2024c085","in~d3a49b5d","in~~10a5cbc14","in~~134106266","in~11b5641a0","in~~71680bb9","in~~71680c2b","in~58adcb08","in~aa13163a","in~~2024c2b8","in~~1341062bb","in~~10a5cbc2d","in~311c4664","in~14507c641","in~~71680c30","in~~47b6677d","in~~1341062c2","in~~99199081","in~14507c63b","in~11b564246","in~aa131665","in~aa131632","in~311c464b","in~311c4766","in~~c2ab36a7","in~82617256","in~14507c69a","in~aa13177d","in~~71680b7d","in~58adcb46","in~~9919926b","old-in~~99199240","in~aa13168a","in~311c4685","in~~47b66712","in~58adcb45","in~14507c6ad","in~~134106261","in~~134106255","in~~c2ab36cb","in~~99199213"
         ]
     },
     "GLOBAL": {
-        "base_url": "https://dashboard.webengage.com",
-        "sheet_name": "User Global",
-        "publisher_url": "https://dashboard.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com",
+        "sheet_name": "Overview Global",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "~c2ab3108","~c2ab3083","~15ba2063d","~47b65ca0","~15ba20218","aa133168","d3a4a339","~10a5cbb7a","~2024a887","~7167d473","11b565ab8","aa13306d","~7167d4b4"
+            "~47b6574d","~47b66864","8261829c","58add307","~2024b5d8","d3a4a457","311c5625","311c5642","~15ba20153","~7167db84","9,91,98,968","~15ba1da68","~134105a52","~716800b0","826174d0","~47b65b6c","~47b6607a","~15ba2020b","~15ba1d691","~c2ab3108","76ab0a5","~15ba20105","~2024bb2d","~134105a04","14507cd4d","~13410604b","76aa78b","~99198a20","~1341056a0","~2024bb10","~10a5cb677","~c2ab313b","13,41,05,965","311c4c4b","~47b66045","~9919868d","~311c4b76","58adca91","76aa76b","82617b34","~2024bada","8261827a","~99198a29","~2024bad5","58add69d","~134105b84","d3a4a6dd","~c2ab3033","8,26,18,089","~1341061bb","d3a4a69c","58add2da","aa132703","~aa1321c5","~c2ab2c0c","~9919871c","~47b66614","14507cc74","11b564b69","aa132225","311c4c14","311c4c11","76aa762","311c4bbb","14507cba8","11b564830","76aac69","7,16,80,627","~oldetmoney","~c2ab275a","~15ba1d70a","~c2ab2ba2","~47b6665c","~991989d1","~old2024c085","~oldmagma1","~oldmagma2","~oldmagma3","11b5646ca","~11b5646b8","~d3a4a286","76aa85d","~47b65b94","~c2ab3083","~d3a49c4c-old","~15ba2019a","~oldrangde","~10a5cb636","9,91,98,226","~99198a14","8,26,17,775","~134105aac","311c4bc4","d3a4a420","~10a5cb20c","14507cc0a","~15ba1db98","~14507ccb9","~134105a45","~15ba200d7","~11b564836","~14507ccc0","~7168071b","~2024bb90","8,26,17,869","~oldUPES","14507cba1","~47b65a1c","8,26,17,779","~10a5cb53d","13,41,05,732","~311c4dc3","~2024bb26","~76aab32","old~2024c1a3","826182a0","~10a5cb24b","11b56488a","~15ba20234","~15ba2063d","~47b661ab","~47b65875","9,91,98,624","14507cd97","13,41,05,353","d3a4ab04","~ c2ab260c","~47b66257","~c2ab3091","~c2ab30aa","~15ba20080","d3a4a3b7","~aa131bd4","~134105b82","~134105a36","58add667","aa131752","11b564bc3","~14507d169"
         ]
     },
     "KSA": {
-        "base_url": "https://dashboard.ksa.webengage.com",
-        "sheet_name": "User KSA",
-        "publisher_url": "https://dashboard.ksa.webengage.com/admin/publisher.html?action=list",
+        "base_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com",
+        "sheet_name": "Overview KSA",
+        "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com/admin/publisher.html?action=list",
         "license_codes": [
-            "ksa~82617408"
+            "ksa~~15ba20526"
         ]
     }
 }
@@ -63,14 +64,14 @@ REGION_CONFIG = {
 def init_google_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Python Script/agreement_file_pasting/mycred-googlesheet.json",
+        "/Users/admin/Desktop/Code Directory/Product_Adaption_Data/Credential File/mycred-googlesheet.json",
         scopes=scopes
     )
     client = gspread.authorize(creds)
 
     sheet_name = REGION_CONFIG[REGION]["sheet_name"]
     sheet = client.open_by_key(
-        "1aw7c-PMc0wv5_QOcQdijEQFxcf9rzFN4vAo9HamVlDw"
+        "1D0-O3OX3TOmZRMRZmyYoubRxBtekAB05b50lcaIOweM"
     ).worksheet(sheet_name)
 
     return sheet
@@ -82,6 +83,7 @@ except Exception as e:
     print(f"❌ Failed to connect to Google Sheets: {e}")
     exit()
 
+# ========== We need no change from here till the edit button clicked ========== #
 
 # ---------- STEP 0: SETUP PERSISTENT PROFILE ----------
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -170,7 +172,18 @@ def search_by_license(driver, wait, license_code):
     )
     search_btn.click()
     print("✅ Succesfully entered the LC and clicked search button")
-    
+
+def should_skip_account(driver):
+
+    # ⚡ FAST check (no page_source)
+    if driver.find_elements(By.XPATH, "//h2[contains(text(),'Oops')]"):
+        return True, "Region mismatch"
+
+    if driver.find_elements(By.XPATH, "//a[.//span[text()='Request a Demo']]"):
+        return True, "Service stopped"
+
+    return False, None
+
 def check_if_result_exists(driver, license_code, timeout=5):
     """
     Returns False if LC does not appear in publisher table (wrong region / invalid)
@@ -291,126 +304,194 @@ def click_edit(driver, wait, license_code):
     edit_btn.click()
     print("✅ Clicked the specific edit button")
 
+# ========== Till here no change things will be same ========== #
 
-def click_users(wait):
-    print("⏳ Clicking Users...")
+from datetime import datetime, timedelta
 
-    users_xpath = (
-        "//a[contains(@href,'/users/overview') and .//span[text()='Users']]"
+def get_previous_month_range():
+
+    today = datetime.today()
+
+    first_day_this_month = today.replace(day=1)
+
+    last_day_prev_month = first_day_this_month - timedelta(days=1)
+
+    first_day_prev_month = last_day_prev_month.replace(day=1)
+
+    start_label = first_day_prev_month.strftime("%B %-d, %Y")
+    end_label = last_day_prev_month.strftime("%B %-d, %Y")
+
+    return start_label, end_label
+
+# MANUAL_START_DAY = 1
+# MANUAL_END_DAY = 28
+
+# def get_previous_month_range():
+
+#     start_day = MANUAL_START_DAY
+#     end_day = MANUAL_END_DAY
+
+#     return start_day, end_day
+
+def go_to_overview(driver, wait, account_id):
+    base_url = REGION_CONFIG[REGION]["base_url"]
+    url = f"{base_url}/accounts/{account_id}/engagement/overview/all"
+
+    driver.get(url)
+
+def wait_for_overview_page(driver):
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'Last')]"))
     )
 
+def select_previous_month_date(driver, wait):
+
+    start_label, end_label = get_previous_month_range()
+
+    print(f"📅 Selecting date: {start_label} → {end_label}")
+
+    # open date dropdown
     wait.until(
-        EC.element_to_be_clickable((By.XPATH, users_xpath))
+        EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Last')]"))
     ).click()
 
-    print("✅ Users opened")
+    # click custom dates
+    wait.until(
+        EC.element_to_be_clickable((By.XPATH, "//span[normalize-space()='Custom dates']"))
+    ).click()
 
-def switch_users_delta(wait, driver, mode):
-    """ mode = 'WoW' or 'MoM' """
-    print(f"🔁 Switching Users delta to {mode}")
-
-    dropdown_head = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//th//div[contains(@class,'pop-over__head')]")
-        )
+    # click previous month arrow
+    prev_btn = wait.until(
+        EC.element_to_be_clickable((
+            By.XPATH,
+            "//button[@aria-label='Move backward to switch to the previous month']"
+        ))
     )
 
-    driver.execute_script("arguments[0].click();", dropdown_head)
+    prev_btn.click()
 
-    option = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, f"//span[normalize-space()='{mode}']")
-        )
+    print("⬅️ Moved calendar to previous month")
+
+    time.sleep(1)
+
+    # start date
+    start_date = wait.until(
+        EC.element_to_be_clickable((
+            By.XPATH,
+            f"//button[contains(@aria-label,'{start_label}')]"
+        ))
     )
 
-    driver.execute_script("arguments[0].click();", option)
+    start_date.click()
 
-    # 🔹 CRITICAL: wait for DOM refresh
-    time.sleep(1.2)
-    wait_for_users_table_or_empty(driver)
+    # end date
+    end_date = wait.until(
+        EC.element_to_be_clickable((
+            By.XPATH,
+            f"//button[contains(@aria-label,'{end_label}')]"
+        ))
+    )
 
-def extract_users_table(driver, license_code, delta_type):
-    rows_data = []
+    end_date.click()
 
-    has_data = wait_for_users_table_or_empty(driver)
+    # apply
+    wait.until(
+        EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='APPLY']"))
+    ).click()
 
-    if not has_data:
-        print(f"⚠️ No Users data for {delta_type}")
+    WebDriverWait(driver, 10).until(
+    lambda d: (
+        d.find_elements(By.XPATH, "//tbody//tr")
+        or d.find_elements(By.XPATH, "//h5[contains(text(),'Channel statistics not available')]")
+    )
+
+)
+
+    print("✅ Date range applied")
+
+# If no Data available -> check
+def is_overview_no_data(driver):
+    return "Channel statistics not available" in driver.page_source
+
+def wait_for_overview_state(driver, timeout=10):
+    """
+    Waits until either:
+    - table rows appear
+    - OR no-data message appears
+    Returns: "DATA" | "NO_DATA"
+    """
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: (
+                d.find_elements(By.XPATH, "//tbody//tr")
+                or d.find_elements(By.XPATH, "//h5[contains(text(),'Channel statistics not available')]")
+            )
+        )
+    except:
+        return "UNKNOWN"
+
+    if driver.find_elements(By.XPATH, "//h5[contains(text(),'Channel statistics not available')]"):
+        return "NO_DATA"
+
+    if driver.find_elements(By.XPATH, "//tbody//tr"):
+        return "DATA"
+
+    return "UNKNOWN"
+
+def extract_overview_table(driver, license_code, start_label, end_label):
+    print("📥 Extracting Overview table...")
+
+    state = wait_for_overview_state(driver)
+
+    if state == "NO_DATA":
+        print("ℹ️ No campaigns → NO_DATA")
         return [[
             license_code,
-            "NO_DATA",
-            "NO_DATA",
-            "NO_DATA",
-            delta_type,
-            "NO_DATA"
+            "NO_DATA","NO_DATA","NO_DATA","NO_DATA",
+            "NO_DATA","NO_DATA","NO_DATA",
+            start_label,
+            end_label
         ]]
 
+    if state != "DATA":
+        print("⚠️ Unknown state → treating as NO_DATA")
+        return [[
+            license_code,
+            "NO_DATA","NO_DATA","NO_DATA","NO_DATA",
+            "NO_DATA","NO_DATA","NO_DATA",
+            start_label,
+            end_label
+        ]]
+
+    # ✅ DATA exists
     rows = driver.find_elements(
         By.XPATH,
         "//tbody/tr[contains(@class,'table__row')]"
     )
 
+    rows_data = []
+
     for row in rows:
-        try:
-            cells = row.find_elements(By.XPATH, "./td")
-            if len(cells) < 4:
-                continue
+        cells = row.find_elements(By.XPATH, "./td")
 
-            channel = cells[0].text.strip() or "UNKNOWN"
-            reach_pct = cells[1].text.strip() or "0%"
-            reach_count = cells[2].text.strip() or "0"
-
-            # Change %
-            change = cells[3].text.strip() or "0.00%"
-
-            rows_data.append([
-                license_code,
-                channel,
-                reach_pct,
-                reach_count,
-                delta_type,
-                change
-            ])
-
-        except:
+        if len(cells) < 7:
             continue
 
+        rows_data.append([
+            license_code,
+            cells[0].text.strip() or "-",
+            cells[1].text.strip() or "-",
+            cells[2].text.strip() or "-",
+            cells[3].text.strip() or "-",
+            cells[4].text.strip() or "-",
+            cells[5].text.strip() or "-",
+            cells[6].text.strip() or "-",
+            start_label,
+            end_label
+        ])
+
+    print(f"✅ Extracted {len(rows_data)} rows")
     return rows_data
-
-def extract_users_reachability(driver, wait, license_code):
-    print("📥 Extracting Users Reachability (WoW + MoM)...")
-
-    all_rows = []
-
-    for mode in ["WoW", "MoM"]:
-        switch_users_delta(wait, driver, mode)
-        rows = extract_users_table(driver, license_code, mode)
-        all_rows.extend(rows)
-
-    return all_rows
-
-def wait_for_users_table_or_empty(driver, timeout=6):
-    """
-    Waits for:
-    - users rows
-    - footer row (Overall)
-    - empty state
-    Returns True if data rows exist, False otherwise
-    """
-    try:
-        WebDriverWait(driver, timeout).until(
-            lambda d: (
-                d.find_elements(By.XPATH, "//tbody/tr[contains(@class,'table__row')]")
-                or d.find_elements(By.XPATH, "//tfoot/tr")
-                or "No data" in d.page_source
-            )
-        )
-    except:
-        return False
-
-    rows = driver.find_elements(By.XPATH, "//tbody/tr[contains(@class,'table__row')]")
-    return len(rows) > 0
-
 
 def append_to_sheet(sheet, rows):
     if rows:
@@ -436,77 +517,91 @@ LICENSE_CODES = REGION_CONFIG[REGION]["license_codes"]
 
 for code in LICENSE_CODES:
     print(f"\n▶ Processing {code}")
+
     try:
-        # Step A: Search and land on result
+        # Step A: Search
         search_by_license(driver, wait, code)
 
-        # 🔥 ERROR HANDLING: LC belongs to another region
+        # wait for either result / oops / request demo
+        WebDriverWait(driver, 5).until(
+            lambda d: (
+                d.find_elements(By.XPATH, f"//tr[contains(., '{code}')]")
+                or d.find_elements(By.XPATH, "//h2[contains(text(),'Oops')]")
+                or d.find_elements(By.XPATH, "//a[.//span[text()='Request a Demo']]")
+            )
+        )
+
+        # 🔥 Step B: Skip check FIRST
+        skip, reason = should_skip_account(driver)
+
+        if skip:
+            print(f"⏭ Skipping {code} → {reason}")
+
+            log_error_to_sheet(sheet, code, "SKIPPED", reason)
+
+            driver.get(REGION_CONFIG[REGION]["publisher_url"])
+            wait.until(EC.presence_of_element_located((By.NAME, "licenseCode")))
+            continue
+
+        # 🚫 Step C: LC not found
         if not check_if_result_exists(driver, code):
             log_error_to_sheet(
                 sheet,
                 code,
-                stage="REGION_MISMATCH",
-                error_reason="License code not found in this region"
+                "REGION_MISMATCH",
+                "License code not found in this region"
             )
+
+            driver.get(REGION_CONFIG[REGION]["publisher_url"])
             continue
-        
-        # Step B: Try to get access (only if needed)
+
+        # Step D: Access handling
         try:
-            open_actions_dropdown(driver, wait, code) # Added driver and code
-            
+            open_actions_dropdown(driver, wait, code)
+
             request_btn_xpath = f"//tr[contains(., '{code}')]//a[contains(@class,'requestAccess')]"
-            if len(driver.find_elements(By.XPATH, request_btn_xpath)) > 0:
+
+            if driver.find_elements(By.XPATH, request_btn_xpath):
                 click_request_access(wait)
                 handle_request_modal(wait, driver)
                 time.sleep(2)
                 close_modal_if_exists(driver)
             else:
-                print("ℹ️ Access already available. Moving to Edit.")
-                # If dropdown is open but we don't need it, refresh or Esc
-                ActionChains(driver).send_keys(Keys.ESCAPE).perform() 
+                print("ℹ️ Access already available")
+                ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+
         except Exception as e:
             print(f"⚠️ Access step skipped: {e}")
 
-        # --- Updated Step C: Pass 'code' to the edit function ---
+        # Step E: Edit
         main_window = driver.current_window_handle
         click_edit(driver, wait, code)
 
-        # SWITCH TO NEW TAB
         for window_handle in driver.window_handles:
             if window_handle != main_window:
                 driver.switch_to.window(window_handle)
                 break
-        print(f"↔️ Switched to Edit tab for {code}")
 
-        # Step D: Extract Data
-        try:
-            click_users(wait)
+        # Step F: Overview
+        go_to_overview(driver, wait, code)
 
-            users_rows = extract_users_reachability(driver, wait, code)
-            append_to_sheet(sheet, users_rows)
+        wait_for_overview_page(driver)  # ✅ NEW
 
-            time.sleep(1)
+        start_label, end_label = get_previous_month_range()
 
-            users_rows = extract_users_reachability(driver, wait, code)
+        select_previous_month_date(driver, wait)
 
-            append_to_sheet(sheet, users_rows)
+        overview_rows = extract_overview_table(driver, code, start_label, end_label)
+        append_to_sheet(sheet, overview_rows)
 
-        except Exception as e:
-            log_error_to_sheet(
-                sheet,
-                code,
-                stage="USERS_REACHABILITY",
-                error_reason=str(e)
-            )
-    
+    except Exception as e:
+        log_error_to_sheet(sheet, code, "OVERVIEW", str(e))
+
     finally:
-        # Step E: Cleanup for next iteration
-        # Close extra tabs and go back to the list
         if len(driver.window_handles) > 1:
-            driver.close() # Closes current (Edit) tab
+            driver.close()
             driver.switch_to.window(main_window)
-        
-        PUBLISHER_URL = REGION_CONFIG[REGION]["publisher_url"]
-        driver.get(PUBLISHER_URL)
 
-        time.sleep(2)
+        driver.get(REGION_CONFIG[REGION]["publisher_url"])
+        wait.until(EC.presence_of_element_located((By.NAME, "licenseCode")))
+        time.sleep(1)

@@ -1,3 +1,22 @@
+# Ignore Secrets
+Credential File/
+mycred-googlesheet.json
+
+# Ignore Selenium Profiles (very important!)
 selenium_profile/
-Credential File/
-Credential File/
+selenium_profile_new/
+Scraping/selenium_profile/
+API_Based/selenium_profile/
+API_Based/selenium_profile_new/
+
+# Ignore Python Caches and Virtual Environments
+venv/
+__pycache__/
+*.pyc
+
+# Ignore Logs and Local Data
+run.log
+output_data.csv
+progress_channels.json
+.DS_Store
+EOF
