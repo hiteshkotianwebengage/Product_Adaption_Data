@@ -152,39 +152,36 @@ def run_scrapper(region):
                 res = fetch_channel(lc, channel, region, cookies, BASE_URLS, page)
 
                 # -------- ACCESS HANDLING --------
+                # -------- ACCESS HANDLING --------
                 if res.status_code == 403:
-
                     logger.info(f"🔒 Requesting access → {lc}")
-
                     status = request_access(lc, region, cookies, BASE_URLS, ROLE_IDS)
 
-                    # ✅ Case 1: Access granted
                     if status == 200:
                         logger.info(f"✅ Access granted → retrying {lc}")
                         time.sleep(random.uniform(3, 6))
-                        continue   # retry API
+                        continue   # Retry the API call
 
-                    # ❌ Case 2: Access failed → maybe session expired
-                    logger.warning("⚠️ Session might be expired")
-
-                    if not session_refreshed:
-                        logger.info("🔄 Refreshing session...")
-
-                        cookies = refresh_session(driver, region)
-                        session_refreshed = True
-
-                        logger.info("✅ Session refreshed")
-
-                        # 🔁 Retry access AFTER refresh
+                    # If status is NOT 200, it's likely a session issue
+                    logger.warning(f"⚠️ Access failed for {lc}. Session might be expired. Refreshing...")
+                    
+                    # 🔄 REFRESH SESSION
+                    new_cookies = refresh_session(driver, region)
+                    
+                    if new_cookies:
+                        cookies = new_cookies # Update the main cookie variable
+                        logger.info("✅ Session refreshed. Retrying access request...")
+                        
+                        # Retry access with NEW cookies
                         status = request_access(lc, region, cookies, BASE_URLS, ROLE_IDS)
-
+                        
                         if status == 200:
                             logger.info(f"✅ Access granted after refresh → retrying {lc}")
                             time.sleep(random.uniform(3, 6))
-                            continue   # retry API
-
-                    # ❌ Still failed
-                    logger.error(f"❌ Access failed permanently → {lc}")
+                            continue # Successfully recovered
+                    
+                    # If we reach here, both original and refreshed attempts failed
+                    logger.error(f"❌ Access failed permanently for {lc} even after refresh attempt.")
                     break
 
                 if res.status_code != 200:
