@@ -3,6 +3,7 @@ import os
 import time
 import random
 import pandas as pd
+import json
 from utils.logger import logger
 
 # Project Imports
@@ -24,8 +25,30 @@ from config.settings import (
     get_backfill_months
 )
 
+# Progress file
+PROGRESS_FILE = "progress_overview.json"
+
 # Constants
 SPREADSHEET_ID = "1NlmL3UiBT8b1mirlyf09iLoRB2cmtR0eNhnraXt9Bu8"
+
+# ----------------------
+# RESUME HELPERS
+# ----------------------
+
+def load_progress():
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_progress(progress):
+    with open(PROGRESS_FILE, "w") as f:
+        json.dump(progress, f, indent=4)
+
+def mark_done(progress, region, lc):
+    progress.setdefault(region, [])
+    if lc not in progress[region]:
+        progress[region].append(lc)
 
 def main():
     # 1. Setup Arguments
@@ -60,9 +83,15 @@ def main():
         tab_name = f"Overview {REGION} {m['month_name']}"
         worksheets[m['month_name']] = get_or_create_worksheet(spreadsheet, tab_name, header)
 
+    progress = load_progress()
+
     # 4. DATA COLLECTION LOOP: One License at a time
     for i, lc in enumerate(license_codes):
-        logger.info(f"🔍 [{i+1}/{len(license_codes)}] Processing License: {lc}")
+        if lc in progress.get(REGION, []):
+            logger.info(f"⏭️ Skipping {lc}")
+            continue
+
+        logger.info(f"🔍 [{i+1}/{len(license_codes)}] {lc}")
         
         # We store monthly batches locally so we can push to GSheets at the end of each license
         license_data_per_month = {m['month_name']: [] for m in backfill_months}
@@ -83,9 +112,27 @@ def main():
             logger.info(f"🔒 Requesting access → {lc}")
             status = request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
 
+            # If first attempt fails, try a session refresh
             if status != 200:
-                logger.error(f"❌ Access failed for {lc}")
-                continue # Skip this LC and move to the next one
+                logger.warning("⚠️ Access request failed → Refreshing Session...")
+                driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
+                time.sleep(7) # Give SSO time to settle
+                cookies = get_session_cookies(driver)
+
+                # Try requesting access one last time with fresh cookies
+                status = request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
+
+            # Check if we finally got access (either 1st or 2nd try)
+            if status == 200:
+                logger.info(f"✅ Access granted for {lc}. Waiting for sync...")
+                # CRITICAL: WebEngage needs a moment to propagate permissions
+                time.sleep(12) 
+                
+                # RE-FETCH the check_payload so the loop starts with a valid 'res'
+                res = fetch_overview(lc, REGION, cookies, BASE_URLS, check_payload)
+            else:
+                logger.error(f"❌ Permanent Access failure for {lc}. Skipping to next License.")
+                continue
 
             time.sleep(random.uniform(5, 8)) # Wait for access to sync
 
@@ -116,6 +163,10 @@ def main():
         for m_name, rows in license_data_per_month.items():
             if rows:
                 push_rows(worksheets[m_name], rows)
+        
+        # ✅ PLACE PROGRESS LOGIC HERE
+        mark_done(progress, REGION, lc)
+        save_progress(progress)
         
         logger.info(f"✅ Finished all months for {lc}")
         time.sleep(random.uniform(2,4))
