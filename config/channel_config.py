@@ -13,13 +13,18 @@ CHANNELS = [
     },
     {
         "name": "EMAIL",
-        "endpoint": "email-messages",
+        "endpoint": "emails",
         "version": "v1",
         "params": {"noView": "true"}
     },
     {
         "name": "WEB_PUSH",
         "endpoint": "web-push",
+        "version": "v1",
+        "params": {"noView": "true"}
+    },{
+        "name": "RCS",
+        "endpoint": "rcs-messages",
         "version": "v1",
         "params": {"noView": "true"}
     },
@@ -32,6 +37,12 @@ CHANNELS = [
     {
         "name": "FACEBOOK",
         "endpoint": "fb-audiences",
+        "version": "v2",
+        "params": {}
+    },
+    {
+        "name": "GOOGLE",
+        "endpoint": "gAd-audiences",
         "version": "v2",
         "params": {}
     }

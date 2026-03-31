@@ -242,26 +242,30 @@ def run_scrapper(region):
                 time.sleep(random.uniform(0.5, 1.2))
 
             # -------- PROCESS DATA --------
-            if success and all_campaigns:
+            if success:
 
-                for month in backfill_months:
-                    rows = parse_channel_data(
-                        all_campaigns,
-                        lc,
-                        channel_name,
-                        month
-                    )
-
-                    if rows:
-                        push_rows(worksheets[month["month_name"]], rows)
-
+                # ✅ ALWAYS mark done (even if empty)
                 mark_done(progress, region, channel_name, lc)
                 save_progress(progress)
 
-                logger.info(f"✅ Completed {lc}")
+                if all_campaigns:
+                    for month in backfill_months:
+                        rows = parse_channel_data(
+                            all_campaigns,
+                            lc,
+                            channel_name,
+                            month
+                        )
+                        if rows:
+                            push_rows(worksheets[month["month_name"]], rows)
+
+                    logger.info(f"✅ Completed {lc} with data")
+
+                else:
+                    logger.info(f"📭 No campaigns → marked done {lc}")
 
             else:
-                logger.info(f"📭 No usable data → {lc}")
+                logger.warning(f"⚠️ Skipping {lc} (no success)")
 
             # -------- COOLING --------
             time.sleep(random.uniform(1.5, 3))

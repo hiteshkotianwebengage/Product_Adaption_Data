@@ -52,11 +52,12 @@ from datetime import datetime
 
 def get_backfill_months():
     months = [
-        ("2025-10-01", "2025-10-31"),
-        ("2025-11-01", "2025-11-30"),
-        ("2025-12-01", "2025-12-31"),
-        ("2026-01-01", "2026-01-31"),
-        ("2026-02-01", "2026-02-28"),
+        # ("2025-10-01", "2025-10-31"),
+        # ("2025-11-01", "2025-11-30"),
+        # ("2025-12-01", "2025-12-31"),
+        # ("2026-01-01", "2026-01-31"),
+        # ("2026-02-01", "2026-02-28"),
+        ("2026-03-01", "2026-03-30"),
     ]
 
     result = []
@@ -88,8 +89,10 @@ def get_backfill_months():
 CHANNEL_ENDPOINTS = {
     "PUSH_NOTIFICATION": "push-notifications",
     "SMS": "sms-messages",
-    "EMAIL": "email-messages",
+    "EMAIL": "emails",
+    "RCS": "rcs-messages",
     "WEB_PUSH": "web-push",
     "WHATSAPP": "whatsapp-messages",
-    "FACEBOOK": "fb-audiences"
+    "FACEBOOK": "fb-audiences",
+    "GOOGLE": "gAd-audiences"
 }
