@@ -25,7 +25,7 @@ def parse_channel_data(contents, lc, channel_name, month_data):
             stats.get("delivered", 0),
             stats.get("clicks", stats.get("click", 0)),
             stats.get("clickThroughConversion", 0),
-            stats.get("clickThroughRevenue", 0),
+            stats.get("revenue", 0),
             month_data["month_name"]
         ])
 

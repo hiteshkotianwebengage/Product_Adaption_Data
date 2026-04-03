@@ -23,6 +23,7 @@ from utils.date_filter import parse_iso_date
 
 PROGRESS_FILE = "progress_channels.json"
 
+SPREADSHEET_ID = "16OVEV-QXpPNKTlTMvnxcIy52ULE9ILUNL14ox_VNOhI"
 
 # ----------------------
 # RESUME HELPERS
@@ -108,7 +109,7 @@ def run_scrapper(region):
 
     # Google Sheets
     client = get_gsheet_client()
-    SPREADSHEET_ID = "16OVEV-QXpPNKTlTMvnxcIy52ULE9ILUNL14ox_VNOhI"
+    
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
 
     # Create month sheets

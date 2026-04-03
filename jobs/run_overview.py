@@ -108,15 +108,15 @@ def main():
         
         res = fetch_overview(lc, REGION, cookies, BASE_URLS, check_payload)
         
-        if res.status_code == 403:
-            logger.info(f"🔒 Requesting access → {lc}")
+        if res.status_code in [401, 403]:
+            logger.info(f"🔒 Access/Session issue → {lc}")
             status = request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
 
             # If first attempt fails, try a session refresh
             if status != 200:
                 logger.warning("⚠️ Access request failed → Refreshing Session...")
                 driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
-                time.sleep(7) # Give SSO time to settle
+                time.sleep(3) # Give SSO time to settle
                 cookies = get_session_cookies(driver)
 
                 # Try requesting access one last time with fresh cookies
@@ -126,15 +126,11 @@ def main():
             if status == 200:
                 logger.info(f"✅ Access granted for {lc}. Waiting for sync...")
                 # CRITICAL: WebEngage needs a moment to propagate permissions
-                time.sleep(12) 
+                time.sleep(10)
                 
-                # RE-FETCH the check_payload so the loop starts with a valid 'res'
-                res = fetch_overview(lc, REGION, cookies, BASE_URLS, check_payload)
             else:
                 logger.error(f"❌ Permanent Access failure for {lc}. Skipping to next License.")
                 continue
-
-            time.sleep(random.uniform(5, 8)) # Wait for access to sync
 
         # Now pull data for EVERY month for this license
         for month_data in backfill_months:
@@ -151,13 +147,24 @@ def main():
             }
 
             time.sleep(random.uniform(1.2, 2.2)) # Smaller jitter between months of the same LC
+            # Inside the month loop
             res = fetch_overview(lc, REGION, cookies, BASE_URLS, payload)
+
+            # 🔄 One-time retry for non-200 responses (like 500, 502, or timeouts)
+            if res.status_code != 200:
+                logger.warning(f"⚠️ Retry {lc} for {m_name} (Status: {res.status_code})")
+                time.sleep(3)
+                res = fetch_overview(lc, REGION, cookies, BASE_URLS, payload)
 
             if res.status_code == 200:
                 parsed_rows = parse_overview(res.json(), lc, month_data["start_label"], month_data["end_label"])
                 license_data_per_month[m_name].extend(parsed_rows)
             else:
-                logger.error(f"❌ Failed {lc} for {m_name}")
+                logger.error(f"❌ Failed permanently {lc} for {m_name} after retry")
+
+        # Add this in your main loop instead:
+        if not any(license_data_per_month.values()):
+            logger.info(f"📭 No data for {lc}")
 
         # 5. Push this specific license's data to all relevant tabs
         for m_name, rows in license_data_per_month.items():

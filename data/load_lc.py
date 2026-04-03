@@ -17,7 +17,7 @@ def load_licence_codes():
 
     sheet = client.open_by_key(
         "1o5QRUGQYptkwe1NdsZcfgD44fQCjjkfY2D_DSftSYa4"
-    ).worksheet("Philip")
+    ).worksheet("Philip with GC")
 
     data = sheet.get_all_records()
 

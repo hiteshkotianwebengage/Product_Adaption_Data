@@ -4,7 +4,6 @@ def parse_overview(data, lc, start_label, end_label):
     # Check if data exists before accessing index [0]
     resp_data = data.get('response', {}).get('data', [])
     if not resp_data:
-        print(f"⚠️ No data found for {lc}")
         return rows
 
     dimension = resp_data[0].get('dimensions', [])

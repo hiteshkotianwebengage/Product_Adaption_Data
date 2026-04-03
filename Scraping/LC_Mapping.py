@@ -20,7 +20,7 @@ from google.oauth2.service_account import Credentials
 # ===============================
 
 SHEET_ID = "1o5QRUGQYptkwe1NdsZcfgD44fQCjjkfY2D_DSftSYa4"
-SHEET_NAME = "LC_Master"
+SHEET_NAME = "LC_Check"
 
 
 # ===============================
