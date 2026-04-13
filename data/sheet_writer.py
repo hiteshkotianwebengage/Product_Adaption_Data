@@ -15,7 +15,16 @@ def get_gsheet_client():
 
     return gspread.authorize(creds)
 
-# Removing this create spreadsheet as im facing some error so directly using SPREADSHEET_ID = "..."
+# Monhtly_Folder_ID
+MONTH_FOLDER_ID = "1iSeNsHi69H3lddZVyfmUNRmiUy-vOWLQ"
+
+# Spreadsheet_Overview & Channel
+SPREADSHEET_ID_O_C = "1RtP7vtmkNEHxH5gvoicxzrZNcNLALNa95ir0cfVXHrA"
+
+# Spreadsheet_Dashboard & MAU
+SPREADSHEET_ID_D_M = "1jO0Ojw_DuulUo4Dy31iSYh2r7eu05ppPGqEqeYX88sY"
+
+# Removing this create spreadsheet as im facing some error so directly using SPREADSHEET_ID = "..." but now we are working with monthly_folder_id
 
 # def get_month_sheet_name(start_label):
 #     dt = datetime.strptime(start_label, "%B %d, %Y")
@@ -51,12 +60,17 @@ def get_or_create_worksheet(sh, tab_name, header):
     try:
         ws = sh.worksheet(tab_name)
     except:
-        ws = sh.add_worksheet(title=tab_name, rows=1000, cols=20)
+        ws = sh.add_worksheet(title=tab_name, rows=1000, cols=len(header) + 1)
         ws.append_row(header)
 
     return ws
 
-def push_rows(ws, rows):
+def push_rows(worksheet, rows_to_add):
+    if not rows_to_add:
+        return
 
-    if rows:
-        ws.append_rows(rows, value_input_option="USER_ENTERED")
+    try:
+        # Modern gspread automatically expands the grid to fit 'rows_to_add'
+        worksheet.append_rows(rows_to_add, value_input_option='USER_ENTERED')
+    except Exception as e:
+        logger.error(f"❌ GSheet Push Failed: {e}")

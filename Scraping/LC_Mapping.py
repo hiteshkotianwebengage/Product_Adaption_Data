@@ -27,23 +27,25 @@ SHEET_NAME = "LC_Check"
 # Region
 # ===============================
 
-REGION = "INDIA"
+# REGION = "INDIA"
+# REGION = "GLOBAL"
+REGION = "KSA"
 
 REGION_CONFIG = {
     "INDIA": {
         "base_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com",
         "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.in.webengage.com/admin/publisher.html?action=list",
-        "column": 2
+        "column": 3
     },
     "GLOBAL": {
         "base_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com",
         "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.webengage.com/admin/publisher.html?action=list",
-        "column": 3
+        "column": 4
     },
     "KSA": {
         "base_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com",
         "publisher_url": "https://p1o82kY:kow3jJs9@dashboard.ksa.webengage.com/admin/publisher.html?action=list",
-        "column": 4
+        "column": 5
     }
 }
 
@@ -65,9 +67,11 @@ def init_sheet():
 
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
-    rows = sheet.get_all_values()
+    # rows = sheet.get_all_values()
+    # This below line will help us start from 2nd column so everything remains same
+    all_codes = sheet.col_values(2)
 
-    license_codes = [row[0] for row in rows[1:] if row[0].strip() != ""]
+    license_codes = [code for code in all_codes[1:] if code.strip() != ""]
 
     print("Total LC found:", len(license_codes))
 
@@ -199,7 +203,8 @@ sheet = init_sheet()
 
 print("✅ Connected to Google Sheets")
 
-license_codes = [c for c in sheet.col_values(1)[1:] if c.strip()]
+# 2 is for the 2nd column where the LC are there and we are skipping the header by [1:]
+license_codes = [c for c in sheet.col_values(2)[1:] if c.strip()]
 
 column_index = REGION_CONFIG[REGION]["column"]
 

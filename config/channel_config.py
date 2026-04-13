@@ -47,19 +47,3 @@ CHANNELS = [
         "params": {}
     }
 ]
-
-CHANNEL_HEADER = [
-    "License",
-    "Channel",
-    "Campaign ID",
-    "Campaign Name",
-    "Status",
-    "Category",
-    "Created On",
-    "Start Date",
-    "Sent",
-    "Delivered",
-    "Clicks",
-    "Conversions",
-    "Revenue"
-]

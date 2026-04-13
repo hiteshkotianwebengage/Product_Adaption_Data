@@ -2,7 +2,7 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 from data.fetch_overview import fetch_overview
-from data.parser import parse_overview
+from data.parser_overview import parse_overview
 from config.settings import PRE_BASE_URLS, BASE_URLS, ROLE_IDS
 import pandas as pd
 import time, random

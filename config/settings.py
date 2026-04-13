@@ -17,6 +17,8 @@ ROLE_IDS = {
     "GLOBAL": "abd40ke",
     "KSA": "abd40ke"
 }
+# The drive URL
+ROOT_FOLDER_ID = "1ofGHkTIOYcYvJe_IMuuLo8SSW3P69WUT"
 
 from datetime import datetime, timedelta
 
@@ -28,20 +30,20 @@ def get_month_info():
     first_prev = last_prev.replace(day=1)
 
     # API Formats
-    # start_date = first_prev.strftime("%Y-%m-%dT00:00:00.000+05:30")
-    # end_date = last_prev.strftime("%Y-%m-%dT23:59:59.999+05:30")
+    start_date = first_prev.strftime("%Y-%m-%dT00:00:00.000+05:30")
+    end_date = last_prev.strftime("%Y-%m-%dT23:59:59.999+05:30")
 
     # Label Formats
-    # start_label = first_prev.strftime("%B %d, %Y")
-    # end_label = last_prev.strftime("%B %d, %Y")
+    start_label = first_prev.strftime("%B %d, %Y")
+    end_label = last_prev.strftime("%B %d, %Y")
 
     # Exact ISO format for WebEngage API
-    start_date = "2025-10-01T00:00:00.000+05:30"
-    end_date   = "2025-10-31T23:59:59.999+05:30"
+    # start_date = "2025-10-01T00:00:00.000+05:30"
+    # end_date   = "2025-10-31T23:59:59.999+05:30"
 
     # Labels for your CSV/Print outputs
-    start_label = "October 01, 2025"
-    end_label   = "October 31, 2025"
+    # start_label = "October 01, 2025"
+    # end_label   = "October 31, 2025"
 
     return start_date, end_date, start_label, end_label
 
