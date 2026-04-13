@@ -55,3 +55,46 @@ FUNNEL_HEADER = [
     "Funnel ID", 
     "Status"
 ]
+
+ALERT_HEADER = [
+    "License",
+    "Alert ID",
+    "Alert Name",
+    "Metric",
+    "Description",
+    "Frequency",
+    "Threshold",
+    "Operator",
+    "Change Type",
+    "Status",
+    "Created By",
+    "Subscribers",
+    "Created At",
+    "Updated At",
+    "Last Evaluated"
+]
+
+EVENT_HEADER = [
+    "License",
+    "Event Name",
+    "Display Name",
+    "Category",
+    "Ignored",
+    "Personalization Status",
+    "Web Status",
+    "Android Status",
+    "iOS Status",
+    "Last Received (Web)",
+    "String Usage",
+    "Integer Usage",
+    "Boolean Usage",
+    "Date Usage"
+]
+
+REVENUE_HEADER = [
+    "License",
+    "Mapping ID",
+    "Event Name",
+    "Revenue Attribute",
+    "Active"
+]

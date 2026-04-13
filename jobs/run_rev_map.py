@@ -3,22 +3,21 @@ import os
 import time
 import random
 import json
-from utils.logger import logger
 import requests
 from requests.exceptions import ReadTimeout, ConnectionError, ChunkedEncodingError
+
+from utils.logger import logger
 
 from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
-from config.headers import DASHBOARD_HEADER
-
-from data.fetch_dashboard import fetch_dashboard
-from data.parser_dashboard import parse_dashboard
+from data.fetch_rev_map import fetch_revenue_mapping
+from data.parser_rev_map import parse_revenue_mapping
 from data.load_lc import load_licence_codes
 from data.sheet_writer import (
     get_gsheet_client,
-    SPREADSHEET_ID_D_M_F,
+    SPREADSHEET_ID_C_R_A,
     get_or_create_worksheet,
     push_rows
 )
@@ -29,11 +28,11 @@ from config.settings import (
     ROLE_IDS
 )
 
-PROGRESS_FILE = "progress_dashboard.json"
+PROGRESS_FILE = "progress_revenue.json"
 
 
 # ----------------------
-# PROGRESS HELPERS
+# PROGRESS
 # ----------------------
 
 def load_progress():
@@ -53,10 +52,10 @@ def mark_done(progress, region, lc):
 
 
 # ----------------------
-# MAIN FUNCTION
+# MAIN
 # ----------------------
 
-def run_dashboard():
+def run_revenue():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--region", required=True)
@@ -72,7 +71,7 @@ def run_dashboard():
         return
 
     # ----------------------
-    # LOGIN FLOW
+    # LOGIN
     # ----------------------
 
     driver = init_driver("selenium_profile")
@@ -80,29 +79,32 @@ def run_dashboard():
     driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
     input("👉 Login and press ENTER...")
 
-    # 🔥 CRITICAL (same as overview/channel)
     driver.get(f"{BASE_URLS[REGION]}/accounts/{license_codes[0]}/engagement/overview/all")
     time.sleep(5)
 
     cookies = get_session_cookies(driver)
 
     # ----------------------
-    # GOOGLE SHEETS
+    # SHEET
     # ----------------------
 
     client = get_gsheet_client()
-    spreadsheet = client.open_by_key(SPREADSHEET_ID_D_M_F)
+    spreadsheet = client.open_by_key(SPREADSHEET_ID_C_R_A)
+
+    header = [
+        "License","Mapping ID","Event Name","Revenue Attribute","Active"
+    ]
 
     worksheet = get_or_create_worksheet(
         spreadsheet,
-        f"Dashboard {REGION}",
-        DASHBOARD_HEADER
+        f"Revenue Mapping {REGION}",
+        header
     )
 
     progress = load_progress()
 
     # ----------------------
-    # MAIN LOOP
+    # LOOP
     # ----------------------
 
     for i, lc in enumerate(license_codes):
@@ -113,88 +115,80 @@ def run_dashboard():
 
         logger.info(f"🔍 [{i+1}/{len(license_codes)}] {lc}")
 
-        # ----------------------
-        # STEP 1: REQUEST ACCESS FIRST
-        # ----------------------
-
-        request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
-        time.sleep(8)
-
-        # ----------------------
-        # STEP 2: FETCH & Self Healing Block
-        # ----------------------
-
-        res = None
+        # --- STEP 1: REQUEST ACCESS ---
         try:
-            res = fetch_dashboard(lc, REGION, cookies, BASE_URLS)
-            
-            # If request worked but session is dead
-            if not res or res.status_code in [401, 403]:
-                raise requests.exceptions.RequestException("Auth/Session Expired")
+            request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
+            time.sleep(8) # Standardized wait for backend sync
+        except Exception as e:
+            logger.error(f"❌ Access Request hard-failed for {lc}: {e}")
+            continue
 
-        except (ReadTimeout, ConnectionError, ChunkedEncodingError, requests.exceptions.RequestException) as e:
-            logger.warning(f"🔄 Recovery triggered for {lc}: {e}")
-            
-            # Refresh Session
+        # --- STEP 2: FETCH + SELF HEAL ---
+        res = None
+        fetch_success = False
+
+        try:
+            res = fetch_revenue_mapping(lc, REGION, cookies, BASE_URLS)
+
+            if not res or res.status_code in [401, 403]:
+                raise requests.exceptions.RequestException()
+            fetch_success = True
+
+        except (ReadTimeout, ConnectionError, ChunkedEncodingError, requests.exceptions.RequestException):
+
+            logger.warning(f"🔄 Recovery → {lc}")
+
             driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
             time.sleep(5)
+
             driver.get(f"{BASE_URLS[REGION]}/accounts/{lc}/engagement/overview/all")
             time.sleep(6)
-            
-            cookies = get_session_cookies(driver)
-            request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
-            time.sleep(8)
 
-            # Final Attempt
+            cookies = get_session_cookies(driver)
+
+            request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
+            time.sleep(6)
+
             try:
-                res = fetch_dashboard(lc, REGION, cookies, BASE_URLS)
-            except Exception as final_err:
-                logger.error(f"❌ Failed after recovery: {final_err}")
+                res = fetch_revenue_mapping(lc, REGION, cookies, BASE_URLS)
+                if res and res.status_code == 200:
+                    fetch_success = True
+            except:
                 res = None
 
-        # ----------------------
-        # FINAL PROCESS
-        # ----------------------
-
-        if res and res.status_code == 200:
-            rows = parse_dashboard(res.json(), lc)
+        # --- STEP 3: FINAL PROCESS & GSHEET PUSH ---
+        if fetch_success and res and res.status_code == 200:
+            rows = parse_revenue_mapping(res.json(), lc)
             
-            sheet_push_done = True # Track if GSheet actually worked
+            sheet_push_successful = True # Track GSheet status
 
             if rows:
                 try:
                     push_rows(worksheet, rows)
-                    # ✅ Added your requested detailed logger
                     logger.info(f"✅ Data pushed ({len(rows)} rows) → {lc}")
                 except Exception as e:
                     logger.error(f"❌ GSheet Push Failed for {lc}: {e}")
-                    sheet_push_done = False # 🚩 Mark failure
+                    sheet_push_successful = False
             else:
-                logger.info(f"📭 No data → {lc}")
+                logger.info(f"📭 No mapping found → {lc}")
 
-            # ✅ MARK DONE ONLY IF GSHEET WORKED (or no rows were found)
-            if sheet_push_done:
+            # 🔥 ONLY mark done if Sheet worked OR if no mapping existed
+            if sheet_push_successful:
                 mark_done(progress, REGION, lc)
                 save_progress(progress)
+                logger.info(f"💾 Completed and Saved → {lc}")
             else:
-                logger.warning(f"⚠️ Progress NOT saved for {lc} due to Sheet error.")
+                logger.warning(f"⚠️ Progress NOT saved for {lc} due to GSheet error.")
 
         else:
-            logger.error(f"❌ Failed → {lc}")
+            logger.error(f"❌ Failed to fetch revenue mapping for {lc}")
 
-        # ----------------------
-        # COOLING
-        # ----------------------
-
+        # Cooling
         time.sleep(random.uniform(2, 3))
 
-        if (i + 1) % 15 == 0:
-            logger.info("😴 Cooling down...")
-            time.sleep(20)
-
-    logger.info("✨ DONE!")
+    logger.info("✨ REVENUE MAPPING DONE")
     driver.quit()
 
 
 if __name__ == "__main__":
-    run_dashboard()
+    run_revenue()

@@ -20,6 +20,8 @@ ROLE_IDS = {
 # The drive URL
 ROOT_FOLDER_ID = "1ofGHkTIOYcYvJe_IMuuLo8SSW3P69WUT"
 
+Credential_File = "/Users/admin/Desktop/Code Directory/Product_Adaption_Data/Credential File/mycred-googlesheet.json"
+
 from datetime import datetime, timedelta
 
 # Updated config/settings.py (Optional cleanup)

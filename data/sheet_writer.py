@@ -2,27 +2,28 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 from utils.logger import logger
+from config.settings import Credential_File
 
 def get_gsheet_client():
 
     scopes = ["https://www.googleapis.com/auth/spreadsheets",
               "https://www.googleapis.com/auth/drive"]
     
-    creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Code Directory/Product_Adaption_Data/Credential File/mycred-googlesheet.json",
-        scopes=scopes
-    )
+    creds = Credentials.from_service_account_file(Credential_File, scopes=scopes)
 
     return gspread.authorize(creds)
 
 # Monhtly_Folder_ID
 MONTH_FOLDER_ID = "1iSeNsHi69H3lddZVyfmUNRmiUy-vOWLQ"
 
-# Spreadsheet_Overview & Channel
+# Spreadsheet Overview & Channel
 SPREADSHEET_ID_O_C = "1RtP7vtmkNEHxH5gvoicxzrZNcNLALNa95ir0cfVXHrA"
 
-# Spreadsheet_Dashboard & MAU
-SPREADSHEET_ID_D_M = "1jO0Ojw_DuulUo4Dy31iSYh2r7eu05ppPGqEqeYX88sY"
+# Spreadsheet Dashboard & MAU, Funnel
+SPREADSHEET_ID_D_M_F = "1jO0Ojw_DuulUo4Dy31iSYh2r7eu05ppPGqEqeYX88sY"
+
+# Spreadsheet Custom Event, Revenue Mapping, Alert
+SPREADSHEET_ID_C_R_A = "1cYar5FXCNQvIchiCWuKmtzEUJPH4miTpf0RJqjWHFak"
 
 # Removing this create spreadsheet as im facing some error so directly using SPREADSHEET_ID = "..." but now we are working with monthly_folder_id
 

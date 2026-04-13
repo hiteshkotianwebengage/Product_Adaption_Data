@@ -17,6 +17,6 @@ __pycache__/
 # Ignore Logs and Local Data
 run.log
 output_data.csv
-progress_channels.json
+progress*
 .DS_Store
 EOF

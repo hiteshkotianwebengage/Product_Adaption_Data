@@ -12,12 +12,12 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
-from data.fetch_funnel import fetch_funnel
-from data.parser_funnel import parse_funnel
+from data.fetch_events import fetch_events
+from data.parser_events import parse_events
 from data.load_lc import load_licence_codes
 from data.sheet_writer import (
     get_gsheet_client,
-    SPREADSHEET_ID_D_M_F,
+    SPREADSHEET_ID_C_R_A,
     get_or_create_worksheet,
     push_rows
 )
@@ -28,7 +28,7 @@ from config.settings import (
     ROLE_IDS
 )
 
-PROGRESS_FILE = "progress_funnel.json"
+PROGRESS_FILE = "progress_events.json"
 
 
 # ----------------------
@@ -55,7 +55,7 @@ def mark_done(progress, region, lc):
 # MAIN
 # ----------------------
 
-def run_funnel():
+def run_events():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--region", required=True)
@@ -89,17 +89,17 @@ def run_funnel():
     # ----------------------
 
     client = get_gsheet_client()
-    spreadsheet = client.open_by_key(SPREADSHEET_ID_D_M_F)
+    spreadsheet = client.open_by_key(SPREADSHEET_ID_C_R_A)
 
     header = [
-        "License","Funnel ID","Funnel Name","Status",
-        "Steps Count","Steps","Completion Time",
-        "Created By","Created At","Last Modified At"
+        "License","Event Name","Display Name","Category","Ignored",
+        "Personalization Status","Web Status","Android Status","iOS Status",
+        "Last Received (Web)","String Usage","Integer Usage","Boolean Usage","Date Usage"
     ]
 
     worksheet = get_or_create_worksheet(
         spreadsheet,
-        f"Funnel {REGION}",
+        f"Events {REGION}",
         header
     )
 
@@ -118,21 +118,22 @@ def run_funnel():
         logger.info(f"🔍 [{i+1}/{len(license_codes)}] {lc}")
 
         # --- STEP 1: REQUEST ACCESS ---
-        request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
-        time.sleep(6)
+        try:
+            request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
+            time.sleep(8)  # Standardized sync wait
+        except Exception as e:
+            logger.error(f"❌ Access Request failed for {lc}: {e}")
+            continue
 
         page = 1
         all_rows = []
-        fetch_success = False # 🚩 Track API completion
+        fetch_success = False
 
         # --- STEP 2: FETCH ALL PAGES ---
-
         while True:
-
             res = None
-
             try:
-                res = fetch_funnel(lc, REGION, cookies, BASE_URLS, page)
+                res = fetch_events(lc, REGION, cookies, BASE_URLS, page)
 
                 if not res or res.status_code in [401, 403]:
                     raise requests.exceptions.RequestException("Auth issue")
@@ -153,7 +154,7 @@ def run_funnel():
                 time.sleep(6)
 
                 try:
-                    res = fetch_funnel(lc, REGION, cookies, BASE_URLS, page)
+                    res = fetch_events(lc, REGION, cookies, BASE_URLS, page)
                 except:
                     res = None
 
@@ -164,9 +165,8 @@ def run_funnel():
 
             data = res.json()
 
-            rows = parse_funnel(data, lc)
-            if rows:
-                all_rows.extend(rows)
+            rows = parse_events(data, lc)
+            all_rows.extend(rows)
 
             total_pages = data.get("response", {}).get("data", {}).get("numberOfPages", 1)
 
@@ -175,10 +175,11 @@ def run_funnel():
                 break
 
             page += 1
-            time.sleep(random.uniform(0.8, 1.2))
+            time.sleep(random.uniform(0.7, 1.1))
 
+        # --- STEP 3: FINAL PUSH & MARK DONE ---
         if fetch_success:
-            sheet_push_done = True 
+            sheet_push_successful = True 
 
             if all_rows:
                 try:
@@ -186,26 +187,26 @@ def run_funnel():
                     logger.info(f"✅ Data pushed ({len(all_rows)} rows) → {lc}")
                 except Exception as e:
                     logger.error(f"❌ GSheet Push Failed for {lc}: {e}")
-                    sheet_push_done = False 
+                    sheet_push_successful = False
             else:
-                logger.info(f"📭 No funnels found → {lc}")
+                logger.info(f"📭 No events found → {lc}")
 
-            # Mark done if Sheet worked OR if there was simply no data to push
-            if sheet_push_done:
+            # 🔥 ONLY mark done if Sheet push worked OR if no data existed
+            if sheet_push_successful:
                 mark_done(progress, REGION, lc)
                 save_progress(progress)
                 logger.info(f"💾 Completed and Saved → {lc}")
             else:
-                logger.warning(f"⚠️ Sheet failure. {lc} will retry next time.")
+                logger.warning(f"⚠️ Progress NOT saved for {lc} due to GSheet error.")
         else:
-            logger.error(f"⚠️ Fetch incomplete for {lc}. Not marking done.")
+            logger.error(f"⚠️ Fetch incomplete for {lc}. Retrying in next run.")
 
         # Cooling
-        time.sleep(random.uniform(2, 3))
+        time.sleep(random.uniform(2,3))
 
-    logger.info("✨ FUNNEL DONE")
+    logger.info("✨ EVENTS DONE")
     driver.quit()
 
 
 if __name__ == "__main__":
-    run_funnel()
+    run_events()

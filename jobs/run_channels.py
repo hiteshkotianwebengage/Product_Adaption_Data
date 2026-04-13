@@ -144,6 +144,8 @@ def run_channel():
             request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
             time.sleep(8)   # 🔥 IMPORTANT
 
+            all_campaigns = []
+            fetch_success = False
             page = 1
 
             while True:
@@ -182,6 +184,7 @@ def run_channel():
 
                 if not res or res.status_code != 200:
                     logger.error(f"❌ Failed → {lc}")
+                    fetch_success = False
                     break
 
                 data = res.json()
@@ -189,7 +192,11 @@ def run_channel():
                 contents = resp_data.get("contents", [])
                 total_pages = resp_data.get("numberOfPages", 1)
 
+                if contents:
+                    all_campaigns.extend(contents)
+
                 if not contents:
+                    fetch_success = True
                     break
 
                 # ----------------------
@@ -205,26 +212,25 @@ def run_channel():
                     month_name
                 )
 
-                if rows:
-                    push_rows(worksheet, rows)
-
                 # ----------------------
                 # EARLY STOP
                 # ----------------------
 
-                oldest_date = None
-
+                oldest_in_page = None
                 for item in contents:
                     dt = parse_iso_date(item.get("createdOn"))
                     if dt:
                         dt = dt.replace(tzinfo=None)
-                        if not oldest_date or dt < oldest_date:
-                            oldest_date = dt
+                        if not oldest_in_page or dt < oldest_in_page:
+                            oldest_in_page = dt
 
-                if oldest_date and oldest_date < start_dt:
+                if oldest_in_page and oldest_in_page < start_dt:
+                    fetch_success = True
                     break
 
+                # Case 3: Reached the very last page
                 if page >= total_pages:
+                    fetch_success = True # 🔥 CRITICAL: You missed this in your draft
                     break
 
                 page += 1
@@ -234,10 +240,27 @@ def run_channel():
             # MARK DONE
             # ----------------------
 
-            mark_done(progress, REGION, channel_name, lc)
-            save_progress(progress)
+            if fetch_success:
+                rows = parse_channel_data(all_campaigns, lc, channel_name, start_dt, end_dt, month_name)
+                
+                sheet_push_done = True # Assume true if no data
+                if rows:
+                    try:
+                        push_rows(worksheet, rows)
+                        logger.info(f"✅ Data pushed ({len(rows)} rows) → {lc}")
+                    except Exception as e:
+                        logger.error(f"❌ GSheet Push Failed for {lc}: {e}")
+                        sheet_push_done = False # 🚩 Set to false on error
 
-            logger.info(f"✅ Done → {lc}")
+                # 🔥 ONLY save progress if EVERYTHING worked
+                if sheet_push_done:
+                    mark_done(progress, REGION, channel_name, lc)
+                    save_progress(progress)
+                    logger.info(f"💾 Completed and Saved → {lc}")
+                else:
+                    logger.warning(f"⚠️ Failed at Sheet step. {lc} will be retried next time.")
+            else:
+                logger.error(f"⚠️ Failed at Fetch step. {lc} will be retried next time.")
 
             # ----------------------
             # COOLING

@@ -195,21 +195,32 @@ def run_overview():
         if res and res.status_code == 200:
             try:
                 rows = parse_overview(res.json(), lc, start_label, end_label)
-
+                
+                sheet_push_successful = True # Track GSheet status
+                
                 if rows:
-                    push_rows(worksheet, rows)
-                    logger.info(f"✅ Data pushed → {lc}")
+                    try:
+                        push_rows(worksheet, rows)
+                        logger.info(f"✅ Data pushed ({len(rows)} rows) → {lc}")
+                    except Exception as sheet_err:
+                        logger.error(f"❌ GSheet Push Failed for {lc}: {sheet_err}")
+                        sheet_push_successful = False
                 else:
-                    logger.info(f"📭 No data → {lc}")
+                    logger.info(f"📭 No data found → {lc}")
 
-                mark_done(progress, REGION, lc)
-                save_progress(progress)
+                # 🔥 ONLY SAVE PROGRESS IF EVERYTHING WORKED
+                if sheet_push_successful:
+                    mark_done(progress, REGION, lc)
+                    save_progress(progress)
+                    logger.info(f"💾 Completed and Saved → {lc}")
+                else:
+                    logger.warning(f"⚠️ Progress NOT saved for {lc} due to Sheet error.")
 
             except Exception as e:
-                logger.error(f"❌ Parsing error → {lc}: {e}")
+                logger.error(f"❌ Parsing error for {lc}: {e}")
 
         else:
-            logger.error(f"❌ Failed → {lc} | Status: {res.status_code if res else 'No Response'}")
+            logger.error(f"❌ Permanent Failure for {lc} | Status: {res.status_code if res else 'None'}")
 
         # ----------------------
         # COOL DOWN

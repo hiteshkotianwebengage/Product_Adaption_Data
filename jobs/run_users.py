@@ -19,7 +19,7 @@ from data.parser_users import parse_users
 from data.load_lc import load_licence_codes
 from data.sheet_writer import (
     get_gsheet_client,
-    SPREADSHEET_ID_D_M,
+    SPREADSHEET_ID_D_M_F,
     get_or_create_worksheet,
     push_rows
 )
@@ -95,7 +95,7 @@ def run_users():
     # ----------------------
 
     client = get_gsheet_client()
-    spreadsheet = client.open_by_key(SPREADSHEET_ID_D_M)
+    spreadsheet = client.open_by_key(SPREADSHEET_ID_D_M_F)
 
     sheets = {
         "MAU": get_or_create_worksheet(spreadsheet, f"MAU {REGION}", USERS_HEADER),
@@ -162,24 +162,37 @@ def run_users():
         # ----------------------
 
         if res and res.status_code == 200:
-
             try:
                 parsed = parse_users(res.json(), lc)
+                
+                # Flag to track if ALL sheets were updated successfully
+                all_pushes_successful = True 
+
+                for metric in ["MAU", "DAU", "WAU"]:
+                    rows = parsed.get(metric, [])
+                    if rows:
+                        try:
+                            push_rows(sheets[metric], rows)
+                            logger.info(f"✅ {metric} pushed ({len(rows)} rows) → {lc}")
+                        except Exception as sheet_err:
+                            logger.error(f"❌ {metric} GSheet Push Failed for {lc}: {sheet_err}")
+                            all_pushes_successful = False
+                    else:
+                        logger.info(f"📭 {metric} - No data → {lc}")
+
+                # 🔥 ONLY MARK DONE IF ALL 3 METRICS (IF PRESENT) PUSHED SUCCESSFULLY
+                if all_pushes_successful:
+                    mark_done(progress, REGION, lc)
+                    save_progress(progress)
+                    logger.info(f"💾 Completed and Saved → {lc}")
+                else:
+                    logger.warning(f"⚠️ Progress NOT saved for {lc} due to one or more Sheet errors.")
+
             except Exception as e:
                 logger.error(f"❌ Parsing failed → {lc}: {e}")
-                continue
-
-            for metric in ["MAU", "DAU", "WAU"]:
-                if parsed[metric]:
-                    push_rows(sheets[metric], parsed[metric])
-
-            mark_done(progress, REGION, lc)
-            save_progress(progress)
-
-            logger.info(f"✅ Data pushed → {lc}")
 
         else:
-            logger.error(f"❌ Failed → {lc}")
+            logger.error(f"❌ Failed → {lc} | Status: {res.status_code if res else 'None'}")
 
         # ----------------------
         # COOLING

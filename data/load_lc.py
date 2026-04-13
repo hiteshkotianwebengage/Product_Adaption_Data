@@ -1,5 +1,6 @@
 import gspread
 from google.oauth2.service_account import Credentials
+from config.settings import Credential_File
 
 def load_licence_codes():
 
@@ -8,10 +9,7 @@ def load_licence_codes():
         'https://www.googleapis.com/auth/drive'
     ]
 
-    creds = Credentials.from_service_account_file(
-        "/Users/admin/Desktop/Code Directory/Product_Adaption_Data/Credential File/mycred-googlesheet.json",
-        scopes=scopes
-    )
+    creds = Credentials.from_service_account_file(Credential_File, scopes=scopes)
 
     client = gspread.authorize(creds)
 
