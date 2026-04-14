@@ -81,7 +81,8 @@ def run_dashboard():
     input("👉 Login and press ENTER...")
 
     # 🔥 CRITICAL (same as overview/channel)
-    driver.get(f"{BASE_URLS[REGION]}/accounts/{license_codes[0]}/engagement/overview/all")
+    publisher_list_url = f"{PRE_BASE_URLS[REGION]}/admin/publisher.html?action=list"
+    driver.get(publisher_list_url)
     time.sleep(5)
 
     cookies = get_session_cookies(driver)

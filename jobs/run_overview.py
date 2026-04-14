@@ -91,7 +91,8 @@ def run_overview():
     input("👉 Login and press ENTER...")
 
     # Step 2: Open publisher page (CRITICAL)
-    driver.get(f"{BASE_URLS[REGION]}/accounts/{license_codes[0]}/engagement/overview/all")
+    publisher_list_url = f"{PRE_BASE_URLS[REGION]}/admin/publisher.html?action=list"
+    driver.get(publisher_list_url)
     time.sleep(6)
 
     # Step 3: Get cookies
