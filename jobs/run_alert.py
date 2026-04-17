@@ -112,98 +112,119 @@ def run_alert():
     # ----------------------
 
     for i, lc in enumerate(license_codes):
-
         if lc in progress.get(REGION, []):
             logger.info(f"⏭️ Skipping {lc}")
             continue
 
-        logger.info(f"🔍 [{i+1}/{len(license_codes)}] {lc}")
-
-        # --- STEP 1: REQUEST ACCESS ---
-        request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
-        time.sleep(6)
+        logger.info(f"🔍 [{i+1}/{len(license_codes)}] Processing {lc}")
 
         page = 1
         all_rows = []
         fetch_success = False
+        is_subscribed = True
         
-        # --- STEP 2: FETCH ALL PAGES ---
-        while True:
-            res = None
-            try:
-                res = fetch_alert(lc, REGION, cookies, BASE_URLS, page)
+        # --- STEP 1: INITIAL FETCH & ACCESS CHECK ---
+        res = None
+        try:
+            res = fetch_alert(lc, REGION, cookies, BASE_URLS, page)
+            
+            # 🚩 PRIORITY 1: Check for Unsubscribed (403)
+            if res is not None and res.status_code == 403:
+                logger.warning(f"🚫 Module not subscribed for {lc}.")
+                is_subscribed = False
+                fetch_success = True 
 
-                if not res or res.status_code in [401, 403]:
-                    raise requests.exceptions.RequestException("Auth issue")
-
-            except (ReadTimeout, ConnectionError, ChunkedEncodingError, requests.exceptions.RequestException):
-
-                logger.warning(f"🔄 Recovery → {lc}")
-
+            # 🚩 PRIORITY 2: Check for Session Expiry (401)
+            elif res is None or res.status_code == 401:
+                logger.warning(f"🔑 Session expired for {lc}. Re-authenticating...")
                 driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
-                time.sleep(5)
-
-                driver.get(f"{BASE_URLS[REGION]}/accounts/{lc}/engagement/overview/all")
+                time.sleep(8)
+                driver.get(f"{PRE_BASE_URLS[REGION]}/admin/publisher.html?action=list")
                 time.sleep(6)
-
                 cookies = get_session_cookies(driver)
-
+                
                 request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
-                time.sleep(6)
+                time.sleep(10)
+                res = fetch_alert(lc, REGION, cookies, BASE_URLS, page)
+                
+                if res and res.status_code == 403:
+                    is_subscribed = False
+                    fetch_success = True
 
-                try:
-                    res = fetch_alert(lc, REGION, cookies, BASE_URLS, page)
-                except:
-                    res = None
+        except Exception as e:
+            logger.error(f"🌐 Network error for {lc}: {e}")
+            res = None
 
-            if not res or res.status_code != 200:
-                logger.error(f"❌ Failed → {lc}")
-                fetch_success = False
-                break
-
-            data = res.json()
-
-            rows = parse_alert(data, lc)
-            all_rows.extend(rows)
-
-            total_pages = data.get("response", {}).get("data", {}).get("numberOfPages", 1)
-
-            if page >= total_pages:
-                fetch_success = True
-                break
-
-            page += 1
-            time.sleep(1)
-
-        # --- STEP 3: FINAL PUSH & MARK DONE ---
-        if fetch_success:
-            sheet_push_successful = True 
-
-            if all_rows:
-                try:
-                    push_rows(worksheet, all_rows)
-                    logger.info(f"✅ Data pushed ({len(all_rows)} rows) → {lc}")
-                except Exception as e:
-                    logger.error(f"❌ GSheet Push Failed for {lc}: {e}")
-                    sheet_push_successful = False
-            else:
-                logger.info(f"📭 No alerts found → {lc}")
-
-            # 🔥 Mark done if Sheet worked OR if no data existed to push
-            if sheet_push_successful:
+        # --- STEP 2: HANDLE UNSUBSCRIBED ACCOUNTS ---
+        if not is_subscribed:
+            # 🚩 Case 1: The module is NOT paid for (Status 403)
+            unsub_row = [lc] + (["UNSUBSCRIBED"] * (len(header) - 1))
+            try:
+                push_rows(worksheet, [unsub_row])
+                logger.info(f"📝 Marked as UNSUBSCRIBED in Sheet → {lc}")
                 mark_done(progress, REGION, lc)
                 save_progress(progress)
-                logger.info(f"💾 Completed and Saved → {lc}")
-            else:
-                logger.warning(f"⚠️ Progress NOT saved for {lc} due to GSheet error.")
-        else:
-            logger.error(f"⚠️ Fetch incomplete for {lc}. Retrying next run.")
+            except Exception as e:
+                logger.error(f"❌ Failed to push unsubscribed row for {lc}: {e}")
+            continue
 
-        time.sleep(random.uniform(2,3))
+        if not res or res.status_code != 200:
+            logger.error(f"❌ Permanent failure for {lc}. Moving to next.")
+            continue
+
+        # --- STEP 3: PAGINATION LOOP ---
+        while True:
+            try:
+                data = res.json()
+                page_data = data.get("response", {}).get("data", {})
+                contents = page_data.get("contents", [])
+                
+                # Check if this is Page 1 and it is totally empty
+                if page == 1 and not contents:
+                    # 🚩 Case 2: Subscribed but no alerts created (Status 200 + Empty)
+                    no_data_row = [lc] + (["NO DATA"] * (len(header) - 1))
+                    all_rows.append(no_data_row)
+                    fetch_success = True
+                    break
+
+                # 🚩 Case 3: Subscribed and has actual data
+                rows = parse_alert(data, lc)
+                all_rows.extend(rows)
+
+                total_pages = page_data.get("numberOfPages", 1)
+                logger.info(f"📄 {lc} | Page {page}/{total_pages} fetched")
+
+                if page >= total_pages:
+                    fetch_success = True
+                    break
+
+                page += 1
+                time.sleep(1.5)
+                res = fetch_alert(lc, REGION, cookies, BASE_URLS, page)
+
+            except Exception as e:
+                logger.error(f"❌ Error parsing {lc} at page {page}: {e}")
+                break
+
+        # --- STEP 4: FINAL PUSH ---
+        if fetch_success:
+            if all_rows:
+                push_rows(worksheet, all_rows)
+                # Differentiate log message for clarity
+                if "NO DATA" in all_rows[0]:
+                    logger.info(f"📭 Marked as NO DATA → {lc}")
+                else:
+                    logger.info(f"✅ Pushed {len(all_rows)} data rows → {lc}")
+            
+            mark_done(progress, REGION, lc)
+            save_progress(progress)
+        else:
+            logger.error(f"⚠️ Process incomplete for {lc}")
+
+        time.sleep(random.uniform(2, 4))
 
     logger.info("✨ ALERT DONE")
     driver.quit()
-
 
 if __name__ == "__main__":
     run_alert()
