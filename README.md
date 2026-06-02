@@ -237,7 +237,7 @@ config/settings.py
 ### Run for a region:
 
 ```bash
-python3 jobs/run_scrapper.py --region GLOBAL
+python3 jobs.run_scrapper --region GLOBAL
 ```
 
 ---

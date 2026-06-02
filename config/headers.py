@@ -98,3 +98,16 @@ REVENUE_HEADER = [
     "Revenue Attribute",
     "Active"
 ]
+
+CUSTOM_EVENTS_HEADER = [
+    "LC",
+    "Event Name",
+    "Attribute Name",
+    "Level",
+    "Type",
+    "Ignored",
+    "Web Status",
+    "Android Status",
+    "iOS Status",
+    "Other Status"
+]

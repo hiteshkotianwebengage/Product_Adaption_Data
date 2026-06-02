@@ -118,6 +118,20 @@ def run_alert():
 
         logger.info(f"🔍 [{i+1}/{len(license_codes)}] Processing {lc}")
 
+        status = request_access(
+            lc,
+            REGION,
+            cookies,
+            BASE_URLS,
+            ROLE_IDS
+        )
+
+        if status == 200:
+            logger.info(
+                f"✅ Access granted → {lc}"
+            )
+            time.sleep(5)
+
         page = 1
         all_rows = []
         fetch_success = False

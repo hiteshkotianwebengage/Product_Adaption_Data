@@ -14,6 +14,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from google.oauth2.service_account import Credentials
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--region",
+    required=True,
+    choices=["INDIA", "GLOBAL", "KSA"]
+)
+
+args = parser.parse_args()
+
+REGION = args.region.upper()
 
 # ===============================
 # CONFIG
@@ -22,14 +35,9 @@ from google.oauth2.service_account import Credentials
 SHEET_ID = "1o5QRUGQYptkwe1NdsZcfgD44fQCjjkfY2D_DSftSYa4"
 SHEET_NAME = "LC_Check"
 
-
 # ===============================
 # Region
 # ===============================
-
-# REGION = "INDIA"
-# REGION = "GLOBAL"
-REGION = "KSA"
 
 REGION_CONFIG = {
     "INDIA": {
@@ -103,7 +111,7 @@ print("⏳ Waiting for page to settle...")
 time.sleep(3) 
 
 # ---------- STEP 2: SMART PAGE DETECTION ----------
-print(f"🔍 Current URL: {driver.current_url}")
+# print(f"🔍 Current URL: {driver.current_url}")
 
 # Give it one refresh if we aren't where we expect to be
 if "publisher.html" not in driver.current_url:
@@ -117,43 +125,44 @@ if "publisher.html" in driver.current_url:
 else:
     try:
         print("🔍 Checking if Publishers link is visible...")
-        # Try a more generic XPath that finds the link even if text is weird
         publisher_xpath = "//a[contains(@href, 'publisher.html')]"
-        wait_short = WebDriverWait(driver, 15) # Increased to 15
-        
+        wait_short = WebDriverWait(driver, 15)
         link = wait_short.until(EC.element_to_be_clickable((By.XPATH, publisher_xpath)))
         link.click()
         print("✅ Clicked Publishers from sidebar.")
-
     except Exception:
-        print("📍 Sidebar link not found. Starting Deep Navigation...")
-
-        # FIX: The profile head might be nested. Let's use a simpler selector.
+        print("📍 Sidebar link not found. Executing fixed Dropdown Navigation...")
         try:
-            profile_xpath = "//div[contains(@class,'pop-over__head')] | //div[contains(@class,'noselect')]"
-            dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, profile_xpath)))
-            driver.execute_script("arguments[0].click();", dropdown) # JS click is safer here
-            print("✅ Opened Profile Dropdown")
+            # FIX: Targeting the profile dropdown header accurately using the class from your HTML
+            dropdown_xpath = "//div[contains(@class, 'pop-over__head')]"
+            dropdown = wait.until(EC.presence_of_element_located((By.XPATH, dropdown_xpath)))
+            
+            # Use JavaScript click to reliably trigger the dropdown
+            driver.execute_script("arguments[0].click();", dropdown)
+            print("✅ Opened Profile Dropdown via JS")
             time.sleep(1.5)
 
-            # Click Super Admin - Use a more flexible text match
-            super_admin_xpath = "//a[normalize-space()='Super Admin' or contains(text(),'Super Admin')]"
-            sa_btn = wait.until(EC.element_to_be_clickable((By.XPATH, super_admin_xpath)))
-            sa_btn.click()
-            print("✅ Clicked Super Admin")
+            # FIX: Targeting the precise Super Admin link element you provided
+            super_admin_xpath = "//a[contains(@href, '/admin') and text()='Super Admin']"
+            sa_btn = wait.until(EC.presence_of_element_located((By.XPATH, super_admin_xpath)))
+            
+            # Click Super Admin via JS to bypass overlay blockages
+            driver.execute_script("arguments[0].click();", sa_btn)
+            print("✅ Clicked Super Admin via JS")
+            time.sleep(3)
 
             # Final check for Publisher link after landing in Super Admin
             final_publisher_xpath = "//a[contains(@href,'publisher.html')]"
-            wait.until(EC.element_to_be_clickable((By.XPATH, final_publisher_xpath))).click()
+            final_pub = wait.until(EC.element_to_be_clickable((By.XPATH, final_publisher_xpath)))
+            driver.execute_script("arguments[0].click();", final_pub)
         except Exception as e:
             print(f"❌ Deep Navigation failed: {e}")
             driver.save_screenshot("nav_failure.png")
-            # If everything fails, try going to the URL directly as a last resort
-            print("🚀 Attempting direct URL navigation...")
+            print("🚀 Last resort: Direct URL navigation...")
             PUBLISHER_URL = REGION_CONFIG[REGION]["publisher_url"]
             driver.get(PUBLISHER_URL)
 
-print("🎯 SUCCESS: You are now on the Publishers page.")
+print("🎯 SUCCESS: Landing complete on Publishers page.")
 
 def search_by_license(driver, wait, license_code):
     license_input = wait.until(

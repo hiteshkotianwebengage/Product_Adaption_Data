@@ -12,6 +12,8 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
+from config.headers import FUNNEL_HEADER
+
 from data.fetch_funnel import fetch_funnel
 from data.parser_funnel import parse_funnel
 from data.load_lc import load_licence_codes
@@ -92,16 +94,10 @@ def run_funnel():
     client = get_gsheet_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID_D_M_F)
 
-    header = [
-        "License","Funnel ID","Funnel Name","Status",
-        "Steps Count","Steps","Completion Time",
-        "Created By","Created At","Last Modified At"
-    ]
-
     worksheet = get_or_create_worksheet(
         spreadsheet,
         f"Funnel {REGION}",
-        header
+        FUNNEL_HEADER
     )
 
     progress = load_progress()

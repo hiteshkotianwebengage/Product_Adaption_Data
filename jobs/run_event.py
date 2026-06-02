@@ -12,6 +12,8 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
+from config.headers import EVENT_HEADER
+
 from data.fetch_events import fetch_events
 from data.parser_events import parse_events
 from data.load_lc import load_licence_codes
@@ -92,16 +94,10 @@ def run_events():
     client = get_gsheet_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID_C_R_A)
 
-    header = [
-        "License","Event Name","Display Name","Category","Ignored",
-        "Personalization Status","Web Status","Android Status","iOS Status",
-        "Last Received (Web)","String Usage","Integer Usage","Boolean Usage","Date Usage"
-    ]
-
     worksheet = get_or_create_worksheet(
         spreadsheet,
         f"Events {REGION}",
-        header
+        EVENT_HEADER
     )
 
     progress = load_progress()

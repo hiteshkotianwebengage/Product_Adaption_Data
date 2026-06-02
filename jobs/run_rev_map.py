@@ -12,6 +12,8 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
+from config.headers import REVENUE_HEADER
+
 from data.fetch_rev_map import fetch_revenue_mapping
 from data.parser_rev_map import parse_revenue_mapping
 from data.load_lc import load_licence_codes
@@ -92,14 +94,10 @@ def run_revenue():
     client = get_gsheet_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID_C_R_A)
 
-    header = [
-        "License","Mapping ID","Event Name","Revenue Attribute","Active"
-    ]
-
     worksheet = get_or_create_worksheet(
         spreadsheet,
         f"Revenue Mapping {REGION}",
-        header
+        REVENUE_HEADER
     )
 
     progress = load_progress()
