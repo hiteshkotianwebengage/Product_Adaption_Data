@@ -93,8 +93,6 @@ def run_overview():
     # Step 2: Open publisher page (CRITICAL)
     publisher_list_url = f"{PRE_BASE_URLS[REGION]}/admin/publisher.html?action=list"
     driver.get(publisher_list_url)
-
-    print(driver.current_url)
     time.sleep(6)
 
     # Step 3: Get cookies
