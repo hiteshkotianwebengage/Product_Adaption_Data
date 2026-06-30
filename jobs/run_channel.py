@@ -2,7 +2,6 @@ import time
 import json
 import os
 import argparse
-import random
 from datetime import datetime
 from requests.exceptions import ReadTimeout, ConnectionError, ChunkedEncodingError, RequestException
 
@@ -28,77 +27,38 @@ from data.sheet_writer import (
     SPREADSHEET_ID_O_C
 )
 
+# Dynamic Utilities Imported From External Modules
 from utils.logger import logger
+from utils.progress_manager import (progress_lock, load_progress, save_progress_raw, save_page_checkpoint)
+from utils.helpers import has_valid_metrics
 
-PROGRESS_FILE = os.path.join("Progress_File", "progress_channels.json")
-
+# ----------------------
+# GLOBAL THREADING LOCKS
+# ----------------------
 session_lock = Lock()
 journey_cache_lock = Lock()
 
 # ----------------------
-# PROGRESS HELPERS
+# MODULAR REFRESH SESSION
 # ----------------------
 
-def load_progress():
-    if os.path.exists(PROGRESS_FILE):
-        try:
-            with open(PROGRESS_FILE, "r") as f:
-                return json.load(f) or {}
-        except:
-            return {}
-    return {}
-
-
-def save_progress(progress):
-    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
-    with open(PROGRESS_FILE, "w") as f:
-        json.dump(progress, f, indent=4)
-
-
-def mark_done(progress, region, lc):
-    progress.setdefault(region, [])
-    if lc not in progress[region]:
-        progress[region].append(lc)
-
-# ----------------------
-# Browser Session Recovery
-# ----------------------
-
-def refresh_browser_session(driver, region):
-    logger.info("🔄 Refreshing administrative cookies and access permissions...")
-    driver.get(f"{PRE_BASE_URLS[region]}/admin")
-    time.sleep(4)
+def refresh_session(driver, region):
+    logger.warning("🔄 Session expired or access denied → executing recovery refresh...")
     
+    # 1. Re-anchor the administrative window
+    driver.get(f"{PRE_BASE_URLS[region]}/admin")
+    time.sleep(8)
+
+    # 2. Open the critical publisher list page to generate tokens
     publisher_list_url = f"{PRE_BASE_URLS[region]}/admin/publisher.html?action=list"
     driver.get(publisher_list_url)
-    time.sleep(5)
-    
+    time.sleep(6)
+
+    # 3. Capture fresh cookies and hand them back
     return get_session_cookies(driver)
 
 # ----------------------
-# Helper metrics 
-# ----------------------
-
-def has_valid_metrics(response_obj):
-    if response_obj.get("message") == "No data":
-        return False
-    
-    data_list = response_obj.get("data", [])
-    if not data_list or not isinstance(data_list, list):
-        return False
-        
-    dimensions_list = data_list[0].get("dimensions", [])
-    if not dimensions_list or not isinstance(dimensions_list, list):
-        return False
-
-    metrics_list = dimensions_list[0].get("metrics", [])
-    if not metrics_list or not isinstance(metrics_list, list):
-        return False
-        
-    return True
-
-# ----------------------
-# Core Campaign Pipeline Worker
+# CORE CAMPAIGN WORKER THREAD
 # ----------------------
 
 def process_campaign(campaign, lc, channel, metrics_from, metrics_to, month_name, REGION, session_context, BASE_URLS, journey_cache):
@@ -166,45 +126,6 @@ def process_campaign(campaign, lc, channel, metrics_from, metrics_to, month_name
     )
 
 # ----------------------
-# Session Refresh
-# ----------------------
-
-# IF session expires 
-def refresh_session(driver, region):
-
-    logger.info("🔄 Attempting silent session refresh...")
-
-    driver.get(f"{PRE_BASE_URLS[region]}/admin")
-    time.sleep(5)
-
-    cookies = get_session_cookies(driver)
-
-    # 🔍 Validate session by checking a quick API call
-    test_url = f"{BASE_URLS[region]}/api/v1/accounts"
-
-    try:
-        import requests
-        res = requests.get(test_url, cookies=cookies)
-
-        if res.status_code == 200:
-            logger.info("✅ Session restored silently")
-            return cookies
-
-    except:
-        pass
-
-    # ❗ FALLBACK → manual login
-    logger.warning("⚠️ Silent refresh failed → manual login needed")
-    input("👉 Please login manually and press ENTER...")
-
-    driver.get(f"{PRE_BASE_URLS[region]}/admin")
-    time.sleep(5)
-
-    cookies = get_session_cookies(driver)
-
-    return cookies
-
-# ----------------------
 # MAIN RUN ENGINE
 # ----------------------
 
@@ -231,13 +152,14 @@ def run_channel():
         logger.error(f"❌ No license codes for {REGION}")
         return
 
+    # STARTUP LOGISTIC ANCHORS
     driver = init_driver("selenium_profile")
     driver.get(f"{PRE_BASE_URLS[REGION]}/admin")
     input("👉 Login and press ENTER...")
 
     publisher_list_url = f"{PRE_BASE_URLS[REGION]}/admin/publisher.html?action=list"
     driver.get(publisher_list_url)
-    time.sleep(5)
+    time.sleep(6)
 
     session_context = {
         "cookies": get_session_cookies(driver),
@@ -254,51 +176,67 @@ def run_channel():
     journey_cache = {}
 
     for idx, lc in enumerate(license_codes):
-        if lc in progress.get(REGION, []):
+        account_state = progress.get(REGION, {}).get(lc, {})
+        if account_state.get("status") == "SUCCESS":
             continue
 
         logger.info(f"💼 Extracting LC: {lc} [{idx + 1}/{len(license_codes)}]")
         
-        # Fire access request ONCE and capture its return status
         status = request_access(lc, REGION, session_context["cookies"], BASE_URLS, ROLE_IDS)
 
-        # If unauthorized/expired, execute recovery logic immediately before proceeding
         if status in [401, 403] or status != 200:
             logger.warning(f"⚠️ Access failed (Status {status}) for {lc}. Session might be expired. Refreshing...")
-            
             with session_lock:
-                new_cookies = refresh_session(driver, REGION)
-                if new_cookies:
-                    session_context["cookies"] = new_cookies
+                if (time.time() - session_context["updated_at"]) > 10:
+                    session_context["cookies"] = refresh_session(driver, REGION)
                     session_context["updated_at"] = time.time()
-                    
-                    # Retry once with recovered session
                     status = request_access(lc, REGION, session_context["cookies"], BASE_URLS, ROLE_IDS)
             
             if status != 200:
-                logger.error(f"❌ Access failed permanently for {lc} even after refresh attempt. Skipping to next account.")
-                continue # Safely skip this account since authentication failed
+                logger.error(f"❌ Access failed permanently for {lc} even after refresh attempt. Skipping account.")
+                continue
 
         logger.info(f"✅ Access established for LC: {lc}. Launching worker pipeline...")
         time.sleep(4)
 
+        channel_states = account_state.get("channels", {})
         account_rows = []
         account_pipeline_success = True
         total_targets_checked = 0
         
-        with ThreadPoolExecutor(max_workers=8) as executor:
+        # Upgraded thread execution footprint to the sweet spot (12 workers)
+        with ThreadPoolExecutor(max_workers=12) as executor:
             for channel in CHANNELS:
+                ch_name = channel['name']
+
                 if not account_pipeline_success:
                     break
-                    
-                page_no = 1
-                channel_total_pages = None  # Tracked dynamically from the first page response
+
+                ch_checkpoint = channel_states.get(ch_name, {"last_successful_page": 0, "completed": False})
+                if ch_checkpoint["completed"]:
+                    logger.info(f"⏭️ Skipping {ch_name} for {lc} (Already marked completed in progress file)")
+                    continue
+                
+                page_no = ch_checkpoint["last_successful_page"] + 1
+                channel_total_pages = None
+
+                logger.info(f"🚀 Starting/Resuming [{ch_name}] for {lc} at Page {page_no}")
                 
                 while True:
                     try:
                         campaign_res = fetch_campaigns(lc, channel, region=REGION, cookies=session_context["cookies"], base_urls=BASE_URLS, page_no=page_no)
+                        
+                        # 🔄 AUTHENTICATION SELF-HEALING ENGINE
                         if campaign_res.status_code in [401, 403]:
-                            raise RequestException("⚠️ Unauthorised or Expired Session")
+                            with session_lock:
+                                if (time.time() - session_context["updated_at"]) > 10:
+                                    session_context["cookies"] = refresh_session(driver, REGION)
+                                    session_context["updated_at"] = time.time()
+                                    status = request_access(lc, REGION, session_context["cookies"], BASE_URLS, ROLE_IDS)
+                                    if status == 200:
+                                        time.sleep(10)
+                            continue
+
                         if campaign_res.status_code != 200:
                             account_pipeline_success = False
                             break
@@ -308,12 +246,13 @@ def run_channel():
                         campaigns = resp_data.get("contents", [])
 
                         if not campaigns:
+                            with progress_lock:
+                                save_page_checkpoint(REGION, lc, ch_name, page_no - 1, completed=True)
                             break
                         
-                        # 📢 Log 1: Print exactly once when starting the channel to state total pages found
-                        if page_no == 1:
+                        if page_no == 1 or channel_total_pages is None:
                             channel_total_pages = resp_data.get("numberOfPages", 1)
-                            logger.info(f" 📥 [{channel['name']}] Discovered {channel_total_pages} total pages to process.")
+                            logger.info(f" 📥 [{ch_name}] Total volume footprint: {channel_total_pages} pages.")
 
                         future_map = {}
                         for campaign in campaigns:
@@ -336,38 +275,34 @@ def run_channel():
                         total_submitted_this_page = len(future_map)
                         total_targets_checked += total_submitted_this_page
 
-                        # Process this page's threads completely silently (no logs inside this loop)
                         for future in as_completed(future_map):
-                            current_camp_id = future_map[future]
                             try:
                                 row = future.result()
                                 if row:
                                     account_rows.append(row)
-                            except (ReadTimeout, ConnectionError, ChunkedEncodingError, RequestException):
-                                account_pipeline_success = False
-                                with session_lock:
-                                    if (time.time() - session_context["updated_at"]) > 10:
-                                        logger.info(f"🔄 Thread token expired alert via campaign {current_camp_id}. Refreshing credentials...")
-                                        new_cookies = refresh_session(driver, REGION)
-                                        session_context["cookies"] = new_cookies
-                                        session_context["updated_at"] = time.time()
-                                        request_access(lc, REGION, new_cookies, BASE_URLS, ROLE_IDS)
-                                        time.sleep(6)
                             except Exception as e:
-                                logger.debug(f"Campaign processing error on ID {current_camp_id}: {e}")
+                                logger.debug(f"Campaign exception skipped: {e}")
 
-                        if not account_pipeline_success:
-                            break
+                        # 📈 MEMORY SHIELD: Flush to GSheets every 50 pages for safety
+                        if page_no % 50 == 0 and account_rows:
+                            logger.info(f"💾 Milestone Hit! Flushing {len(account_rows)} rows to sheet for safety...")
+                            push_rows(worksheet, account_rows)
+                            account_rows.clear()
+                            with progress_lock:
+                                save_page_checkpoint(REGION, lc, ch_name, page_no, completed=(page_no >= channel_total_pages))
 
-                        if page_no >= channel_total_pages:
-                            break
+                        # 💾 SAVE STATE CHECKPOINT (Optimized to write every 10 pages or terminal page)
+                        elif page_no % 10 == 0 or page_no >= channel_total_pages:
+                            with progress_lock:
+                                save_page_checkpoint(REGION, lc, ch_name, page_no, completed=(page_no >= channel_total_pages))
+                            
                         page_no += 1
                         
                     except (ReadTimeout, ConnectionError, ChunkedEncodingError, RequestException) as list_err:
-                        logger.warning(f"🔌 Connection exception inside list loop: {list_err}. Processing healing...")
+                        logger.warning(f"🔌 Connection drop caught inside list tracking: {list_err}. Activating healing...")
                         with session_lock:
                             if (time.time() - session_context["updated_at"]) > 10:
-                                session_context["cookies"] = refresh_browser_session(driver, REGION)
+                                session_context["cookies"] = refresh_session(driver, REGION)
                                 session_context["updated_at"] = time.time()
                                 request_access(lc, REGION, session_context["cookies"], BASE_URLS, ROLE_IDS)
                                 time.sleep(6)
@@ -377,28 +312,37 @@ def run_channel():
                         account_pipeline_success = False
                         break
 
-                # 📢 Log 2: Print exactly once when the entire channel finishes processing
                 if account_pipeline_success and channel_total_pages:
-                    logger.info(f" ✨ [{channel['name']}] Successfully processed all {channel_total_pages} pages.")
+                    logger.info(f" ✨ [{ch_name}] Successfully processed all {channel_total_pages} pages.")
 
-        # Log total stats aggregated cleanly per license code
         if total_targets_checked > 0:
-            logger.info(f"📊 Tracking summary for {lc}: Formatted {len(account_rows)} valid metric rows out of {total_targets_checked} targets checked.")
+            logger.info(f"📊 Tracking summary for {lc}: Formatted {len(account_rows)} residual valid metric rows out of {total_targets_checked} targets checked.")
 
-        # Commit collected data to Google Sheet
         if account_pipeline_success:
             sheet_push_done = True
             if account_rows:
                 try:
                     push_rows(worksheet, account_rows)
-                    logger.info(f"✅ Sheet payload committed successfully ({len(account_rows)} records added) → {lc}")
+                    logger.info(f"✅ Final sheet payload committed successfully ({len(account_rows)} records added) → {lc}")
+                    account_rows.clear()
                 except Exception as e:
                     logger.error(f"❌ Sheet push execution failed for account {lc}: {e}")
                     sheet_push_done = False
 
             if sheet_push_done:
-                mark_done(progress, REGION, lc)
-                save_progress(progress)
+                with progress_lock:
+                    try:
+                        current_data = load_progress()
+                        if REGION not in current_data:
+                            current_data[REGION] = {}
+                        if lc not in current_data[REGION]:
+                            current_data[REGION][lc] = {}
+                        
+                        current_data[REGION][lc]["status"] = "SUCCESS"
+                        current_data[REGION][lc]["updated_at"] = datetime.now().isoformat()
+                        save_progress_raw(current_data)
+                    except Exception as e:
+                        logger.error(f"❌ Failed to mark account success: {e}")
             else:
                 logger.warning(f"⚠️ Tracking exception caught. {lc} flagged for automated retry.")
         else:
