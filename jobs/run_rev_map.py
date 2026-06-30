@@ -30,8 +30,7 @@ from config.settings import (
     ROLE_IDS
 )
 
-PROGRESS_FILE = "progress_revenue.json"
-
+PROGRESS_FILE = os.path.join("Progress_File", "progress_revenue.json")
 
 # ----------------------
 # PROGRESS
@@ -44,6 +43,7 @@ def load_progress():
     return {}
 
 def save_progress(progress):
+    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
     with open(PROGRESS_FILE, "w") as f:
         json.dump(progress, f, indent=4)
 

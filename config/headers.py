@@ -6,22 +6,54 @@ OVERVIEW_HEADER = ["License",
     "End Date"]
 
 CHANNEL_HEADER = [
+
+    # Account
     "License",
+
+    # Campaign
     "Channel",
     "Campaign ID",
     "Campaign Name",
-    "Status",
-    "Category",
-    "Created On",
-    "Start Date",
+    "Campaign Status",
+    "Campaign Type",
+    "Campaign Created On",
+    "Campaign Start Date",
+    "Campaign Tags",
+
+    # Journey
+    "Journey ID",
+    "Journey Name",
+    "Journey Status",
+    "Journey Created By",
+
+    # Conversion
+    "Conversion Event",
+    "Control Group",
+
+    # Delivery
+    "Delivery Status",
     "Sent",
     "Delivered",
+    "Views",
     "Clicks",
+
+    # Performance
     "Conversions",
+    "View Through Conversions",
     "Click Through Conversions",
+
+    "Delivered Rate",
+    "Click Rate",
+    "Conversion Rate",
+
+    # Revenue
     "Revenue",
+    "View Through Revenue",
     "Click Through Revenue",
+
+    # Month
     "Month"
+
 ]
 
 DASHBOARD_HEADER = [

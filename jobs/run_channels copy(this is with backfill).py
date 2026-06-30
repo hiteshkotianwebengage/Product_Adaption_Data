@@ -8,8 +8,8 @@ from auth.login import init_driver
 from auth.cookies import get_session_cookies
 from access.request_access import request_access
 
-from data.fetch_channels import fetch_channel
-from data.parser_channels import parse_channel_data
+from data.fetch_channels_old import fetch_channel
+from data.parser_channels_old import parse_channel_data
 
 from config.settings import PRE_BASE_URLS, BASE_URLS, ROLE_IDS, get_backfill_months
 from config.channel_config import CHANNELS, CHANNEL_HEADER

@@ -30,8 +30,7 @@ from config.settings import (
 from config.headers import OVERVIEW_HEADER
 
 # Progress file
-PROGRESS_FILE = "progress_overview.json"
-
+PROGRESS_FILE = os.path.join("Progress_File", "progress_overview.json")
 
 # ----------------------
 # PROGRESS HELPERS
@@ -45,6 +44,7 @@ def load_progress():
 
 
 def save_progress(progress):
+    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
     with open(PROGRESS_FILE, "w") as f:
         json.dump(progress, f, indent=4)
 
@@ -147,7 +147,6 @@ def run_overview():
         status = request_access(lc, REGION, cookies, BASE_URLS, ROLE_IDS)
 
         if status == 200:
-            logger.info(f"✅ Access granted → {lc} (waiting for sync...)")
             time.sleep(5)   # 🔥 CRITICAL WAIT
         else:
             logger.warning(f"⚠️ Access unclear → {lc} (continuing anyway)")

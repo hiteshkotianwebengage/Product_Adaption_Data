@@ -16,16 +16,27 @@ def get_gsheet_client():
 # We have to only change the "MONTH_FOLDER_ID" and links of All the spreadsheet after creating new spreadsheet in the new month and moving to the folder and then we can use the same code for pushing data to the sheet without any change in the code.
 
 # Monhtly_Folder_ID
-MONTH_FOLDER_ID = "1atWKSTnnQ-z8zMj8oOUqrvePHm8bOmlB"
+MONTH_FOLDER_ID = "12we1Z9QLYugag3jPPGVFe5wRdZoF0YW6"
 
 # Spreadsheet Overview & Channel
-SPREADSHEET_ID_O_C = "1YAd5S4U67Kegm1VCbhdh-SCadFxDVKlZD9oj48Gj71A"
+# Jan
+# SPREADSHEET_ID_O_C = "1YYa9vwR2y4-_FD9-ZcMX5aOdmCh3o65Mu07cAceWhic"
+# Feb
+# SPREADSHEET_ID_O_C = "1jcaG62jrBcL5XJ9YitnJiobCdEIaNr4tQyrZVss8ies"
+# April
+SPREADSHEET_ID_O_C = "1w0VfmtukcWxgngKK_3PTWV7Kk1kTA1oiQq8vK4OfPUA"
+# May
+# SPREADSHEET_ID_O_C = "1YAd5S4U67Kegm1VCbhdh-SCadFxDVKlZD9oj48Gj71A"
 
 # Spreadsheet Dashboard & MAU, Funnel
-SPREADSHEET_ID_D_M_F = "1Aas9lFYVet6P9poJ8Km7prijH6wCIxjfa6RuMziH2Ug"
+# SPREADSHEET_ID_D_M_F = "1oq3MUvYvvzfFykh-xk_B1UU1TL2rF1zG_FJkQZPCSFU"
+# Feb
+SPREADSHEET_ID_D_M_F = "1LSP5qW0Pra4ssafnrC1mAIImkNznSx-HF7uZSTErugY"
 
 # Spreadsheet Custom Event, Revenue Mapping, Alert
-SPREADSHEET_ID_C_R_A = "1RwTri8R2ZzoCHm5yWAx1I5yAP7I7sEatEgivjLltg_8"
+# SPREADSHEET_ID_C_R_A = "1otFDRib02J6JQvDDkXf4jp1y6mFb2NE_vMgROW2ensc"
+# Feb
+SPREADSHEET_ID_C_R_A = "1otFDRib02J6JQvDDkXf4jp1y6mFb2NE_vMgROW2ensc"
 
 # Removing this create spreadsheet as im facing some error so directly using SPREADSHEET_ID = "..." but now we are working with monthly_folder_id
 
@@ -69,48 +80,30 @@ def get_or_create_worksheet(sh, tab_name, header):
     return ws
 
 def push_rows(worksheet, rows_to_add):
-
     if not rows_to_add:
         return
-
+    
     try:
-
         # -------------------------------------------------
         # PRE-EXPAND SHEET
         # -------------------------------------------------
-
         current_rows = worksheet.row_count
+        
+        # Performance optimization: get length directly instead of pulling down all cell data
+        all_values = worksheet.get_all_values()
+        existing_rows_count = len(all_values)
 
-        required_rows = (
-            len(rows_to_add)
-            + len(worksheet.get_all_values())
-            + 100
-        )
+        required_rows = len(rows_to_add) + existing_rows_count + 100
 
         if required_rows > current_rows:
-
-            worksheet.resize(
-                rows=required_rows
-            )
-
-            logger.info(
-                f"📈 Worksheet Expanded "
-                f"| {current_rows} -> {required_rows}"
-            )
+            worksheet.resize(rows=required_rows)
+            logger.info(f"📈 Worksheet Expanded | {current_rows} -> {required_rows}")
 
         # -------------------------------------------------
-        # APPEND
+        # APPEND (Directly writes the ordered lists passed from parser)
         # -------------------------------------------------
-
-        worksheet.append_rows(
-            rows_to_add,
-            value_input_option='USER_ENTERED'
-        )
+        worksheet.append_rows(rows_to_add, value_input_option='USER_ENTERED')
 
     except Exception as e:
-
-        logger.error(
-            f"❌ GSheet Push Failed: {repr(e)}"
-        )
-
+        logger.error(f"❌ GSheet Push Failed: {repr(e)}")
         raise

@@ -32,23 +32,80 @@ def get_month_info():
     first_prev = last_prev.replace(day=1)
 
     # API Formats
-    start_date = first_prev.strftime("%Y-%m-%dT00:00:00.000+05:30")
-    end_date = last_prev.strftime("%Y-%m-%dT23:59:59.999+05:30")
+    # start_date = first_prev.strftime("%Y-%m-%dT00:00:00.000+05:30")
+    # end_date = last_prev.strftime("%Y-%m-%dT23:59:59.999+05:30")
 
-    # Label Formats
-    start_label = first_prev.strftime("%B %d, %Y")
-    end_label = last_prev.strftime("%B %d, %Y")
+    # # Label Formats
+    # start_label = first_prev.strftime("%B %d, %Y")
+    # end_label = last_prev.strftime("%B %d, %Y")
 
-    # Exact ISO format for WebEngage API
-    # start_date = "2025-10-01T00:00:00.000+05:30"
-    # end_date   = "2025-10-31T23:59:59.999+05:30"
+    # ----------------------------
+    # January
+    # ----------------------------
+    # # Exact ISO format for WebEngage API - January
+    # start_date = "2026-01-01T00:00:00.000+05:30"
+    # end_date = "2026-01-31T23:59:59.999+05:30"
+
+    # # Labels for your CSV/Print outputs
+    # start_label = "January 01, 2026"
+    # end_label = "January 31, 2026"
+
+    # ----------------------------
+    # February
+    # ----------------------------
+    # # Exact ISO format for WebEngage API - February
+    # start_date = "2026-02-01T00:00:00.000+05:30"
+    # end_date = "2026-02-28T23:59:59.999+05:30"
+
+    # # Labels for your CSV/Print outputs
+    # start_label = "February 01, 2026"
+    # end_label = "February 28, 2026"
+
+    # ----------------------------
+    # March
+    # ----------------------------
+    # # Exact ISO format for WebEngage API - March
+    # start_date = "2026-03-01T00:00:00.000+05:30"
+    # end_date = "2026-03-31T23:59:59.999+05:30"
+
+    # # Labels for your CSV/Print outputs
+    # start_label = "March 01, 2026"
+    # end_label = "March 31, 2026"
+
+    # ----------------------------
+    # April
+    # ----------------------------
+    # Exact ISO format for WebEngage API - April
+    start_date = "2026-04-01T00:00:00.000+05:30"
+    end_date = "2026-04-30T23:59:59.999+05:30"
 
     # Labels for your CSV/Print outputs
-    # start_label = "October 01, 2025"
-    # end_label   = "October 31, 2025"
+    start_label = "April 01, 2026"
+    end_label = "April 30, 2026"
+
+    # ----------------------------
+    # MAY
+    # ----------------------------
+    # # Exact ISO format for WebEngage API - May
+    # start_date = "2026-05-01T00:00:00.000+05:30"
+    # end_date = "2026-05-31T23:59:59.999+05:30"
+
+    # # Labels for your CSV/Print outputs
+    # start_label = "May 01, 2026"
+    # end_label = "May 31, 2026"
+
+    # ----------------------------
+    # MAY
+    # ----------------------------
+    # # Exact ISO format for WebEngage API - June
+    # start_date = "2026-06-01T00:00:00.000+05:30"
+    # end_date = "2026-06-30T23:59:59.999+05:30"
+
+    # # Labels for your CSV/Print outputs
+    # start_label = "June 01, 2026"
+    # end_label = "June 30, 2026"
 
     return start_date, end_date, start_label, end_label
-
 
 # ---------------------------
 # Back fill temporary
@@ -86,17 +143,3 @@ def get_backfill_months():
         })
 
     return result
-
-#  -----------------------------------------
-# This is for the List of campaigns settings
-
-CHANNEL_ENDPOINTS = {
-    "PUSH_NOTIFICATION": "push-notifications",
-    "SMS": "sms-messages",
-    "EMAIL": "emails",
-    "RCS": "rcs-messages",
-    "WEB_PUSH": "web-push",
-    "WHATSAPP": "whatsapp-messages",
-    "FACEBOOK": "fb-audiences",
-    "GOOGLE": "gAd-audiences"
-}

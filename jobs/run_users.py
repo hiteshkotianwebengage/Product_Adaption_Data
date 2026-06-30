@@ -31,8 +31,7 @@ from config.settings import (
     get_month_info
 )
 
-PROGRESS_FILE = "progress_users.json"
-
+PROGRESS_FILE = os.path.join("Progress_File", "progress_users.json")
 
 # ----------------------
 # PROGRESS HELPERS
@@ -45,6 +44,7 @@ def load_progress():
     return {}
 
 def save_progress(progress):
+    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
     with open(PROGRESS_FILE, "w") as f:
         json.dump(progress, f, indent=4)
 

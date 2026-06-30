@@ -47,7 +47,7 @@ from requests.exceptions import (
     ChunkedEncodingError
 )
 
-PROGRESS_FILE = "progress_custom_events.json"
+PROGRESS_FILE = os.path.join("Progress_File", "progress_custom_events.json")
 
 
 # ---------------------------------------------------------
@@ -55,25 +55,19 @@ PROGRESS_FILE = "progress_custom_events.json"
 # ---------------------------------------------------------
 
 def load_progress():
-
     if os.path.exists(PROGRESS_FILE):
-
         try:
-
             with open(PROGRESS_FILE, "r") as f:
                 return json.load(f) or {}
-
         except:
             return {}
-
     return {}
 
 
 def save_progress(progress):
-
+    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
     with open(PROGRESS_FILE, "w") as f:
         json.dump(progress, f, indent=4)
-
 
 def mark_done(progress, region, lc):
 
@@ -81,7 +75,6 @@ def mark_done(progress, region, lc):
 
     if lc not in progress[region]:
         progress[region].append(lc)
-
 
 # ---------------------------------------------------------
 # RUNNER
