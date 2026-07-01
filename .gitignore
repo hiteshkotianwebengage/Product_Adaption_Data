@@ -17,7 +17,7 @@ __pycache__/
 # Ignore Logs and Local Data
 run.log
 output_data.csv
-progress*
+Progress_File/
 .DS_Store
 EOF
 TEST/
